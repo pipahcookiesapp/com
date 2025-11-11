@@ -192,24 +192,14 @@ body {
 <body>
 
 <div class="gallery-wrapper" id="galleryWrapper">
-  <div class="gallery-title">PipahCookies 🍪 Gallery</div>
-  <div class="gallery-description">Jemput cuci mata, inilah produk² Homemade kami. Klik pada gambar untuk zoom.</div>
+  <div class="gallery-title">Jualan Harian</div>
+  <div class="gallery-description">*LIMITED stok! Jemput cuci mata, inilah produk² Homemade kami. Klik pada gambar untuk zoom.</div>
 
   <div class="gallery-section">
     <div class="gallery-container" id="gallery">
-      <div class="card"><video src="Images/kpvid.mp4" autoplay muted loop playsinline webkit-playsinline></video></div>
-      <div class="card"><video src="Images/donut.mp4" autoplay muted loop playsinline webkit-playsinline></video></div>
-      <div class="card"><video src="Images/meringue.mp4" autoplay muted loop playsinline webkit-playsinline></video></div>
-      <div class="card"><img src="Images/ss3.jpg" alt="1"/></div>
-      <div class="card"><img src="Images/pic30.jpg" alt="2"/></div>
-      <div class="card"><img src="Images/ch2.jpg" alt="3"/></div>
-      <div class="card"><img src="Images/kp2.jpg" alt="4"/></div>
-      <div class="card"><img src="Images/rv2.jpg" alt="5"/></div>
-      <div class="card"><img src="Images/pic31.jpg" alt="6"/></div>
-      <div class="card"><img src="Images/pic10.jpg" alt="7"/></div>
-      <div class="card"><img src="Images/pic29.jpg" alt="8"/></div>
-      <div class="card"><img src="Images/pic28.jpg" alt="9"/></div>
-      <div class="card"><img src="Images/pic27.jpg" alt="10"/></div>
+      <div class="card"><img src="Images/item1.jpg" alt="1"/></div>
+      <div class="card"><img src="Images/item2.jpg" alt="2"/></div>
+      <div class="card"><img src="Images/ss1.jpg" alt="3"/></div>
     </div>
   </div>
 
@@ -250,20 +240,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- PRODUCT DATA ---
   const products = [
-    { id: 1, name: 'Kueh Putu Bundle', price: 5.50, isVideo: true },
-    { id: 2, name: 'Premium Chocolate Donut', price: 3.00, isVideo: true },
-    { id: 3, name: 'Rainbow Meringue Kisses', price: 8.90, isVideo: true },
-    { id: 4, name: 'Signature Salty Snacks Jar', price: 12.00, isVideo: false },
-    { id: 5, name: 'Deluxe Coconut Cake', price: 15.50, isVideo: false },
-    { id: 6, name: 'Soft Bake Chocolate Chip', price: 7.50, isVideo: false },
-    { id: 7, name: 'Pandan Layer Cake', price: 18.00, isVideo: false },
-    { id: 8, name: 'Red Velvet Supreme', price: 22.00, isVideo: false },
-    { id: 9, name: 'Blueberry Cheesecake Slice', price: 16.50, isVideo: false },
-    { id: 10, name: 'Mini Fruit Tarts (6 Pcs)', price: 9.90, isVideo: false },
-    { id: 11, name: 'Festive Cookies Box', price: 30.00, isVideo: false },
-    { id: 12, name: 'Assorted Sweets Platter', price: 25.00, isVideo: false },
-    { id: 13, name: 'Celebration Platter', price: 40.00, isVideo: false },
-  ];
+    { id: 1, name: 'Osaka Creampuff 20pcs', price: 10.00, isVideo: false },
+    { id: 2, name: 'Roti Golok', price: 10.00, isVideo: false },
+    { id: 3, name: 'Seasalt Cookies 65pcs', price: 16.00, isVideo: false },
+     ];
   
   // --- CART HOOK (Using postMessage to communicate with the parent page) ---
   addToCartBtn.addEventListener('click', () => {
