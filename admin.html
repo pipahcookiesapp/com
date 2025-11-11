@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PipahCookies Elegant 3D Gallery (External Cart)</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* --- THEME COLORS --- */
+:root {
+  --color-primary: #5a4f3c; /* Deep Brown Text */
+  --color-secondary: #ffad60; /* Cookie Orange/Highlight */
+  --color-background: #f7f3ee; /* Soft Beige */
+  --color-card-bg: rgba(255, 255, 255, 0.7); /* Transparent Card */
+}
+
+/* --- GENERAL & LAYOUT --- */
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-background); 
+  font-family: 'Poppins', sans-serif;
+  color: var(--color-primary);
+  width: 100%;
+}
+
+.gallery-wrapper {
+  text-align: center;
+  max-width: 380px; 
+  position: relative; 
+  padding: 0 10px;
+  box-sizing: border-box;
+  width: 100%; 
+  min-height: 500px; 
+}
+.gallery-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 6px;
+}
+.gallery-description {
+  font-size: 0.85rem;
+  color: #7b7060;
+  margin: 0 0 20px 0;
+  line-height: 1.4;
+}
+
+/* --- GALLERY SECTION --- */
+.gallery-section {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; 
+    width: 100%;
+    max-width: 380px;
+    position: relative;
+}
+.gallery-container {
+  perspective: 1500px;
+  width: 100%;
+  max-width: 330px;
+  height: 220px;
+  position: relative;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+/* --- 3D CARD STYLES --- */
+.card {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
+  overflow: hidden;
+  transform-origin: center;
+  transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.6s ease, filter 0.6s ease;
+  background: var(--color-card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(5px);
+  z-index: 1;
+}
+.card img, .card video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.card.prev {
+    transform: translateX(-70%) translateZ(-300px) rotateY(25deg) scale(0.9);
+    opacity: 0.6;
+    filter: blur(3px);
+    z-index: 0;
+}
+.card.next {
+    transform: translateX(70%) translateZ(-300px) rotateY(-25deg) scale(0.9);
+    opacity: 0.6;
+    filter: blur(3px);
+    z-index: 0;
+}
+.card.active {
+    transform: translateX(0) translateZ(0) rotateY(0) scale(1);
+    opacity: 1; 
+    filter: blur(0);
+    z-index: 2; 
+    cursor: grab;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+.card.hidden {
+    opacity: 0; 
+    pointer-events: none; 
+    transition: none;
+    transform: scale(0.5) translateZ(-500px); 
+}
+
+/* --- PRODUCT DETAIL CARD --- */
+.product-details {
+  background: var(--color-card-bg);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  margin-top: 15px;
+  padding: 10px 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  min-height: 60px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.product-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.product-price {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-secondary);
+  margin-top: 2px;
+}
+.add-to-cart-btn {
+  background-color: var(--color-secondary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+.pulse-confirm {
+  animation: pulse .3s;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* --- VIEWER (Zoom) --- */
+.viewer {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 10, 10, 0.9); z-index: 9999; opacity: 0; visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s ease; pointer-events: none;
+}
+.viewer.show { opacity: 1; visibility: visible; pointer-events: auto; }
+.viewer-content {
+  position: relative; max-width: 95%; max-height: 90%; z-index: 10000;
+  transform: scale(.9); transition: transform .35s ease;
+}
+.viewer.show .viewer-content { transform: scale(1); }
+.viewer img, .viewer video {
+  width: auto; height: auto; max-width: 95vw; max-height: 85vh;
+  border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  background: #000; object-fit: contain; display: block;
+}
+.close-btn {
+  position: absolute; top: 10px; right: 10px; z-index: 10010;
+  background: rgba(255,255,255,0.8); border: none; border-radius: 50%;
+  width: 36px; height: 36px; font-size: 22px; font-weight: bold; color: var(--color-primary);
+  cursor: pointer; 
+}
+</style>
+</head>
+<body>
+
+<div class="gallery-wrapper" id="galleryWrapper">
+  <div class="gallery-title">PipahCookies 🍪 Gallery</div>
+  <div class="gallery-description">Jemput cuci mata, inilah produk² Homemade kami. Klik pada gambar untuk zoom.</div>
+
+  <div class="gallery-section">
+    <div class="gallery-container" id="gallery">
+      <div class="card"><video src="Images/kpvid.mp4" autoplay muted loop playsinline webkit-playsinline></video></div>
+      <div class="card"><video src="Images/donut.mp4" autoplay muted loop playsinline webkit-playsinline></video></div>
+      <div class="card"><video src="Images/meringue.mp4" autoplay muted loop playsinline webkit-playsinline></video></div>
+      <div class="card"><img src="Images/ss3.jpg" alt="1"/></div>
+      <div class="card"><img src="Images/pic30.jpg" alt="2"/></div>
+      <div class="card"><img src="Images/ch2.jpg" alt="3"/></div>
+      <div class="card"><img src="Images/kp2.jpg" alt="4"/></div>
+      <div class="card"><img src="Images/rv2.jpg" alt="5"/></div>
+      <div class="card"><img src="Images/pic31.jpg" alt="6"/></div>
+      <div class="card"><img src="Images/pic10.jpg" alt="7"/></div>
+      <div class="card"><img src="Images/pic29.jpg" alt="8"/></div>
+      <div class="card"><img src="Images/pic28.jpg" alt="9"/></div>
+      <div class="card"><img src="Images/pic27.jpg" alt="10"/></div>
+    </div>
+  </div>
+
+  <div class="product-details">
+    <div class="product-info">
+      <div class="product-name" id="product-name">Product Name</div>
+      <div class="product-price" id="product-price">RM 0.00</div>
+    </div>
+    <button class="add-to-cart-btn" id="add-to-cart-btn">Add to Cart</button>
+  </div>
+</div>
+
+<div id="mediaViewer" class="viewer" aria-hidden="true">
+  <div class="viewer-content">
+    <img id="viewerImage" src="" alt="" />
+    <video id="viewerVideo" controls playsinline webkit-playsinline></video>
+    <button id="viewerClose" class="close-btn" aria-label="Close viewer">&times;</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // --- DOM ELEMENTS ---
+  const gallery = document.getElementById('gallery');
+  const cards = Array.from(gallery.querySelectorAll('.card'));
+  const productNameEl = document.getElementById('product-name');
+  const productPriceEl = document.getElementById('product-price');
+  const addToCartBtn = document.getElementById('add-to-cart-btn');
+  const viewer = document.getElementById('mediaViewer');
+  const viewerContent = viewer.querySelector('.viewer-content');
+  const viewerImg = document.getElementById('viewerImage');
+  const viewerVid = document.getElementById('viewerVideo');
+  const viewerClose = document.getElementById('viewerClose');
+  const galleryWrapper = document.getElementById('galleryWrapper');
+
+  // --- VARIABLES & CONSTANTS ---
+  let activeIndex = 0;
+
+  // --- PRODUCT DATA ---
+  const products = [
+    { id: 1, name: 'Kueh Putu Bundle', price: 5.50, isVideo: true },
+    { id: 2, name: 'Premium Chocolate Donut', price: 3.00, isVideo: true },
+    { id: 3, name: 'Rainbow Meringue Kisses', price: 8.90, isVideo: true },
+    { id: 4, name: 'Signature Salty Snacks Jar', price: 12.00, isVideo: false },
+    { id: 5, name: 'Deluxe Coconut Cake', price: 15.50, isVideo: false },
+    { id: 6, name: 'Soft Bake Chocolate Chip', price: 7.50, isVideo: false },
+    { id: 7, name: 'Pandan Layer Cake', price: 18.00, isVideo: false },
+    { id: 8, name: 'Red Velvet Supreme', price: 22.00, isVideo: false },
+    { id: 9, name: 'Blueberry Cheesecake Slice', price: 16.50, isVideo: false },
+    { id: 10, name: 'Mini Fruit Tarts (6 Pcs)', price: 9.90, isVideo: false },
+    { id: 11, name: 'Festive Cookies Box', price: 30.00, isVideo: false },
+    { id: 12, name: 'Assorted Sweets Platter', price: 25.00, isVideo: false },
+    { id: 13, name: 'Celebration Platter', price: 40.00, isVideo: false },
+  ];
+  
+  // --- CART HOOK (Using postMessage to communicate with the parent page) ---
+  addToCartBtn.addEventListener('click', () => {
+    const product = products[activeIndex];
+    
+    // Send data to the parent window (index2.html)
+    window.parent.postMessage({ 
+        eventType: 'gallery:addToCart',
+        detail: { 
+            productId: product.id, 
+            productName: 'Gallery: ' + product.name, // Prefix name to differentiate
+            productPrice: product.price, 
+            quantity: 1
+        } 
+    }, '*'); // '*' means any origin. Use a specific origin for production security.
+    
+    // Add a simple pulse/flash animation to confirm the click
+    addToCartBtn.classList.add('pulse-confirm');
+    setTimeout(() => addToCartBtn.classList.remove('pulse-confirm'), 300);
+  });
+  
+ // --- GALLERY SLIDER FUNCTIONS ---
+  function setActive(index) {
+    activeIndex = (index + cards.length) % cards.length;
+    
+    cards.forEach((c, i) => {
+      let state = 'hidden';
+      if (i === activeIndex) state = 'active';
+      else if (i === (activeIndex + 1) % cards.length) state = 'next';
+      else if (i === (activeIndex - 1 + cards.length) % cards.length) state = 'prev';
+      
+      c.className = `card ${state}`;
+      
+      const video = c.querySelector('video');
+      if (video) {
+        if (i === activeIndex) {
+            video.play().catch(()=>{});
+        } else {
+            video.pause();
+        }
+      }
+    });
+    
+    const currentProduct = products[activeIndex];
+    productNameEl.textContent = currentProduct.name;
+    productPriceEl.textContent = `RM ${currentProduct.price.toFixed(2)}`;
+    
+    if(viewer.classList.contains('show')) showViewer(activeIndex);
+  }
+
+  // --- Drag/Swipe Control ---
+  function dragControl(container, onSwipe){
+    let dragging = false, startX = 0, diff = 0;
+    
+    const startDrag = (clientX) => { dragging = true; startX = clientX; container.style.cursor = 'grabbing'; };
+    const moveDrag = (clientX) => { if(dragging) diff = clientX - startX; };
+    const endDrag = () => { 
+        if(dragging){ 
+            if(Math.abs(diff) > 30) onSwipe(diff < 0 ? 1 : -1);
+            dragging = false; diff = 0; 
+        }
+        container.style.cursor = 'grab';
+    };
+
+    container.addEventListener('touchstart', e => startDrag(e.touches[0].clientX), {passive: true});
+    container.addEventListener('touchmove', e => moveDrag(e.touches[0].clientX), {passive: true});
+    container.addEventListener('touchend', endDrag);
+
+    container.addEventListener('mousedown', e => { startDrag(e.clientX); e.preventDefault(); });
+    container.addEventListener('mousemove', e => moveDrag(e.clientX));
+    container.addEventListener('mouseup', endDrag);
+    container.addEventListener('mouseleave', () => { dragging = false; diff = 0; container.style.cursor = 'grab'; });
+  }
+
+  dragControl(gallery, d => setActive(activeIndex + d));
+  dragControl(viewerContent, d => setActive(activeIndex + d));
+
+  // --- VIEWER (Zoom) FUNCTIONS ---
+  function showViewer(index){
+    const media = cards[index].querySelector('img, video');
+    if(!media) return;
+
+    viewerImg.style.display = 'none';
+    viewerVid.style.display = 'none';
+    viewerVid.pause();
+    
+    if(media.tagName === 'IMG') {
+      viewerImg.src = media.src;
+      viewerImg.alt = media.alt;
+      viewerImg.style.display = 'block';
+    }
+    if(media.tagName === 'VIDEO'){
+      const videoSrc = media.currentSrc || media.src; 
+      viewerVid.src = videoSrc;
+      viewerVid.style.display = 'block';
+      viewerVid.load();
+      viewerVid.play().catch(e => console.log('Video play failed:', e));
+    }
+  }
+
+  function openViewer(index){
+    viewer.classList.add('show');
+    setActive(index);
+  }
+
+  function closeViewer(){
+    viewer.classList.remove('show');
+    viewerVid.pause();
+    viewerVid.removeAttribute('src'); 
+    viewerVid.load();
+  }
+
+  gallery.addEventListener('click', (e) => {
+    const activeCard = e.target.closest('.card.active');
+    if (activeCard) openViewer(activeIndex);
+  });
+  
+  viewerClose.addEventListener('click', closeViewer);
+  viewer.addEventListener('click', e => { 
+    if(e.target === viewer || e.target === viewerClose) closeViewer(); 
+  });
+  
+  // --- Auto-resize Iframe (for parent page scroll) ---
+  function resizeIframe() {
+    // Get the total height of the gallery content
+    const height = galleryWrapper.offsetHeight; 
+    
+    // Send the height to the parent window
+    window.parent.postMessage({ galleryHeight: height }, '*');
+  }
+
+  // --- Initialization ---
+  setActive(0);
+  // Initial resize
+  resizeIframe();
+  // Re-resize on window events (e.g., orientation change or product detail change)
+  window.addEventListener('resize', resizeIframe);
+  
+});
+</script>
+  
+</body>
+</html>
