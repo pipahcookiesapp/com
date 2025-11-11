@@ -1,27 +1,24 @@
-
  <!doctype html>
 <html lang="ms">
 <head>
- <link rel="apple-touch-icon" href="Images/icon.png">
+ <link rel="apple-touch-icon" href="images/icon.png">
  <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#d2b48c">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Pipah Cookies — Homemade rasa Premium</title>
  
-  <!-- 🌟 Facebook / WhatsApp / Telegram Preview -->
-<meta property="og:title" content="PipahCookies — Homemade Rasa Premium 🍪" />
+  <meta property="og:title" content="PipahCookies — Homemade Rasa Premium 🍪" />
 <meta property="og:description" content="Setiap hari lebih manis dengan PipahCookies 🍪 Homemade, FreshBake & Tasty. Klik untuk order!" />
-<meta property="og:image" content="https://pipahcookiesapp.github.io/com/Images/preview.png" />
-<meta property="og:url" content="https://pipahcookiesapp.github.io/com/" />
+<meta property="og:image" content="https://pipahcookies.github.io/com/images/preview.png" />
+<meta property="og:url" content="https://pipahcookies.github.io/com/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="PipahCookies" />
 
-<!-- 🐦 Twitter Preview (optional) -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="PipahCookies — Homemade Rasa Premium 🍪" />
 <meta name="twitter:description" content="Setiap hari lebih manis dengan PipahCookies 🌷 Homemade, FreshBake & Tasty. Klik untuk order!" />
-<meta name="twitter:image" content="https://pipahcookiesapp.github.io/com/Images/preview.png" />
+<meta name="twitter:image" content="https://pipahcookies.github.io/com/images/preview.png" />
  
  <style>
  :root{
@@ -374,13 +371,10 @@
 </head>
 <body>
 
-  <!-- ========== HEADER ========== -->
-  <!-- Put your header image at images/header.jpg -->
   <header class="site-header">
-    <img src="Images/Header2.jpg" alt="Pipah Cookies" class="header-img">
+    <img src="images/Header2.jpg" alt="Pipah Cookies" class="header-img">
   </header>
 
-  <!-- ========== NAV ========== -->
   <nav class="site-nav">
     <ul class="nav-list">
       <li><a href="#offers">Tawaran</a></li>
@@ -393,35 +387,55 @@
     </ul>
   </nav>
 
-  <!-- ========== OFFERS CAROUSEL ========== -->
-  <section id="offers" class="section offers-section fade-up">
-    <div class="carousel" id="carousel">
-      <div class="slides">
-        <!-- images: images/offer1.jpg ... offer4.jpg -->
-        <img src="Images/Banner1.png" alt="Tawaran 1" class="slide">
-        <img src="Images/Banner4.jpg" alt="Tawaran 2" class="slide">
-        <img src="Images/Banner3.jpg" alt="Tawaran 3" class="slide">
-        <img src="Images/pic31.jpg" alt="Tawaran 4" class="slide">
-      </div>
-      <div class="dots" id="carousel-dots"></div>
-    </div>
-  </section>
 
-  <!-- ========== MAIN ========== -->
   <main>
-   <!-- PRODUCTS -->
-<section id="products" class="section fade-up">
+<div class="pipah-gallery-container">
+    <iframe 
+        src="admin.html" 
+        class="pipah-gallery-iframe" 
+        title="PipahCookies Product Gallery"
+        scrolling="no"
+    ></iframe>
+</div>
+     <style>
+     /* Container for centering the entire embed */
+.pipah-gallery-container {
+    /* Set max width to match the gallery's internal max-width (380px) plus padding */
+    max-width: 400px; 
+    margin: 30px auto; /* Centers the whole gallery horizontally */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Optional: A nice lift effect */
+    border-radius: 10px;
+    background: #f7f3ee; /* Match the gallery's background for a seamless look */
+    padding: 10px; /* Internal padding */
+}
+
+/* Styling for the iFrame itself */
+.pipah-gallery-iframe {
+    width: 100%;
+    /* Set a fixed height that accommodates the gallery (220px) + details card (~80px) */
+    height: 450px; 
+    border: none; /* Crucial: Removes the default iFrame border */
+    display: block;
+    overflow: hidden; /* Prevent scrolls inside the iFrame */
+}
+
+/* IMPORTANT: Ensure your body/main page content has a high enough Z-index 
+   so the fixed cart popup (Z-index 999) doesn't appear under elements 
+   like a fixed header on your main page. */
+
+     </style>
+     
+     
+    <section id="products" class="section fade-up">
   <h2>Produk Kami</h2>
 
-  <!-- ✅ Single container for all products -->
   <div class="product-grid" id="product-grid">
 
-    <!-- card 1 -->
     <article class="card product-card">
       <div class="product-slider">
-        <img src="Images/ss1.jpg" class="product-img active" alt="Seasalt (1)">
-        <img src="Images/ss2.jpg" class="product-img" alt="Seasalt (2)">
-        <img src="Images/ss3.jpg" class="product-img" alt="Seasalt (3)">
+        <img src="images/ss1.jpg" class="product-img active" alt="Seasalt (1)">
+        <img src="images/ss2.jpg" class="product-img" alt="Seasalt (2)">
+        <img src="images/ss3.jpg" class="product-img" alt="Seasalt (3)">
         <div class="slider-dots">
           <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
         </div>
@@ -436,12 +450,11 @@
       <button class="btn primary" onclick="addToCart('p1','Seasalt Cookies (65pcs)',16)">Tambah ke Troli</button>
     </article>
 
-    <!-- card 2 -->
     <article class="card product-card">
       <div class="product-slider">
-        <img src="Images/ch1.jpg" class="product-img active" alt="ChocHazelnut (1)">
-        <img src="Images/ch2.jpg" class="product-img" alt="ChocHazelnut (2)">
-        <img src="Images/ch3.jpg" class="product-img" alt="ChocHazelnut (3)">
+        <img src="images/ch1.jpg" class="product-img active" alt="ChocHazelnut (1)">
+        <img src="images/ch2.jpg" class="product-img" alt="ChocHazelnut (2)">
+        <img src="images/ch3.jpg" class="product-img" alt="ChocHazelnut (3)">
         <div class="slider-dots">
           <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
         </div>
@@ -456,12 +469,11 @@
       <button class="btn primary" onclick="addToCart('p2','ChocHazelnut Button(38pcs)',22)">Tambah ke Troli</button>
     </article>
 
-    <!-- card 3 -->
     <article class="card product-card">
       <div class="product-slider">
-        <img src="Images/br1.jpg" class="product-img active" alt="Brownies Cookies (1)">
-        <img src="Images/br2.jpg" class="product-img" alt="Brownies Cookies (2)">
-        <img src="Images/br3.jpg" class="product-img" alt="Brownies Cookies (3)">
+        <img src="images/br1.jpg" class="product-img active" alt="Brownies Cookies (1)">
+        <img src="images/br2.jpg" class="product-img" alt="Brownies Cookies (2)">
+        <img src="images/br3.jpg" class="product-img" alt="Brownies Cookies (3)">
         <div class="slider-dots">
           <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
         </div>
@@ -476,12 +488,11 @@
       <button class="btn primary" onclick="addToCart('p3','Brownies Cookies(70pcs)',19)">Tambah ke Troli</button>
     </article>
 
-    <!-- card 4 -->
     <article class="card product-card">
       <div class="product-slider">
-        <img src="Images/bc1.jpg" class="product-img active" alt="Black Cookies (1)">
-        <img src="Images/bc2.jpg" class="product-img" alt="Black Cookies (2)">
-        <img src="Images/bc3.jpg" class="product-img" alt="Black Cookies (3)">
+        <img src="images/bc1.jpg" class="product-img active" alt="Black Cookies (1)">
+        <img src="images/bc2.jpg" class="product-img" alt="Black Cookies (2)">
+        <img src="images/bc3.jpg" class="product-img" alt="Black Cookies (3)">
         <div class="slider-dots">
           <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
         </div>
@@ -496,12 +507,11 @@
       <button class="btn primary" onclick="addToCart('p4','Black Cookies(80pcs)',19)">Tambah ke Troli</button>
     </article>
 
-    <!-- card 5 -->
     <article class="card product-card">
       <div class="product-slider">
-        <img src="Images/rv1.jpg" class="product-img active" alt="RedVelvet Button (1)">
-        <img src="Images/rv2.jpg" class="product-img" alt="RedVelvet Button (2)">
-        <img src="Images/rv3.jpg" class="product-img" alt="RedVelvet Button (3)">
+        <img src="images/rv1.jpg" class="product-img active" alt="RedVelvet Button (1)">
+        <img src="images/rv2.jpg" class="product-img" alt="RedVelvet Button (2)">
+        <img src="images/rv3.jpg" class="product-img" alt="RedVelvet Button (3)">
         <div class="slider-dots">
           <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
         </div>
@@ -516,12 +526,11 @@
       <button class="btn primary" onclick="addToCart('p5','RedVelvet Button',20)">Tambah ke Troli</button>
     </article>
 
-       <!-- card 6 -->
-    <article class="card product-card">
+        <article class="card product-card">
       <div class="product-slider">
-        <img src="Images/dc1.jpg" class="product-img active" alt="DarkChoc Cookies (1)">
-        <img src="Images/dc2.jpg" class="product-img" alt="DarkChoc Cookies (2)">
-        <img src="Images/dc3.jpg" class="product-img" alt="DarkChoc Cookies (3)">
+        <img src="images/dc1.jpg" class="product-img active" alt="DarkChoc Cookies (1)">
+        <img src="images/dc2.jpg" class="product-img" alt="DarkChoc Cookies (2)">
+        <img src="images/dc3.jpg" class="product-img" alt="DarkChoc Cookies (3)">
         <div class="slider-dots">
           <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
         </div>
@@ -539,7 +548,6 @@
   </div>
 </section>
 
-    <!-- ABOUT -->
     <section id="about" class="section fade-up">
       <h2>*PERHATIAN*</h2>
       <p class="lead">*• KOS POSTAGE BERMULA RM5 KEATAS BERDASARKAN JUMLAH PESANAN (JIKA MENCUKUPI MOQ MUNGKIN ADA DISKAUN). </p>
@@ -557,8 +565,7 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
       <p class="lead">*Harga belum termasuk postage fee* </p>
     </section>
 
-     <!-- 🍪 Cookie Dino Run Game Section -->
-<section id="cookie-game" style="text-align:center; margin:70px 0; padding:40px 0; background:#fffaf0; border-radius:20px;">
+     <section id="cookie-game" style="text-align:center; margin:70px 0; padding:40px 0; background:#fffaf0; border-radius:20px;">
   <h2 style="font-family:Poppins,sans-serif; color:#5a3e1b; margin-bottom:20px;">
     Run for the cookie !! - Dino 🦖 
   </h2>
@@ -571,15 +578,13 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
     title="Cookie Dino Game" 
     loading="lazy">
   </iframe>
-  <!-- 💬 WhatsApp Share Button -->
-  <a href="https://wa.me/?text=Play Cookie Dino 🍪 on my website: https://pipahcookiesapp.github.io/com/game/index.html#cookie-game"
+  <a href="https://wa.me/?text=Play Cookie Dino 🍪 on my website: https://pipahcookies.github.io/com/game/index.html#cookie-game"
      target="_blank"
      class="whatsapp-share-btn">
      📲 Share game Dino kat WhatsApp member 😄
   </a>
 </section>
     
-<!-- 🍪 PipahCookies WhatsApp Chat Ribbon -->
 <a href="https://wa.me/601121243407?text=Hai saya nak tanya tentang cookies 🍪" 
    class="whatsapp-ribbon" target="_blank">
   <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" />
@@ -652,17 +657,16 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
 }
 </style>
    
-    <!-- TESTIMONIALS -->
-     <section class="testimonial-section" id="testimonials">
+    <section class="testimonial-section" id="testimonials">
     <h2 class="section-title">Apa kata pelanggan kami? (boleh slide < >) </></h2>
     <div class="testimonial-bg"></div>
 
     <div class="testimonial-gallery">
    
-      <img src="Images/tst1.jpg" class="active" alt="testimonial 1" />
-      <img src="Images/tst2.jpg" alt="testimonial 2" />
-      <img src="Images/tst3.jpg" alt="testimonial 3" />
-      <img src="Images/tst.jpg" alt="testimonial 4" />
+      <img src="images/tst1.jpg" class="active" alt="testimonial 1" />
+      <img src="images/tst2.jpg" alt="testimonial 2" />
+      <img src="images/tst3.jpg" alt="testimonial 3" />
+      <img src="images/tst.jpg" alt="testimonial 4" />
 
       <div class="quote active">"Founder SK sendiri puji biskut brownies dan  seasalt cookies sedapp"</div>
       <div class="quote">"The seasalt biscuits are so tasty, thank you once again"</div>
@@ -684,9 +688,7 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
   <iframe src="3dGallery.html" width="400" height="400" style="border:none;"></iframe>
 
 </section>
-    <!-- GALLERY -->
-  <!-- Gallery Section -->
-<section id="gallery">
+    <section id="gallery">
  <p> sila tap untuk buka </p>
   <iframe 
       src="gallery.html" 
@@ -697,7 +699,6 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
   </iframe>
 </section>
 
-    <!-- FAQ -->
     <section id="faq" class="section fade-up">
       <h2>Soalan Lazim</h2>
       <div class="faq">
@@ -708,8 +709,7 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
       </div>
     </section>
 
- <!-- 🍪 Customer Comment Section -->
-<section id="comments" style="background:#f7f3ef;padding:30px;border-radius:20px;margin:40px auto;max-width:700px;">
+ <section id="comments" style="background:#f7f3ef;padding:30px;border-radius:20px;margin:40px auto;max-width:700px;">
   <h2 style="text-align:center;color:#5a3e36;">💬 Komen Pelanggan</h2>
   <form id="commentForm" style="margin-top:20px;">
     <input type="text" id="name" placeholder="Nama anda" required 
@@ -726,7 +726,6 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
 </section>
 
 
-    <!-- CONTACT -->
     <section id="contact" class="section fade-up">
       <h2>Hubungi Kami</h2>
       <p>Untuk pesanan atau pertanyaan, hantarkan mesej melalui WhatsApp atau Follow dan chat di shopee dan insta kami.</p>
@@ -739,11 +738,10 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
   
 
   
-<!-- 🎵 Floating Music Button with Smart Color + Auto Hide -->
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
 
 <audio id="bgmusic" loop muted>
-  <source src="Images/music.mp3" type="audio/mpeg">
+  <source src="images/music.mp3" type="audio/mpeg">
 </audio>
 
 <div id="musicWrapper" style="position:fixed; bottom:20px; left:20px; z-index:9999; display:flex; align-items:center; transition:opacity 0.8s ease, transform 0.8s ease;">
@@ -807,13 +805,11 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
 
   </main>
 
-  <!-- FLOATING CART ICON -->
   <button id="cart-icon" aria-label="Troli" onclick="toggleCart()">
     <span class="icon">🛒</span>
     <span id="cart-badge" class="badge">0</span>
   </button>
 
-  <!-- CART PANEL -->
   <aside id="cart-panel" class="cart-panel" aria-live="polite" aria-hidden="true">
     <div class="cart-header">
       <h3>Troli Anda</h3>
@@ -838,7 +834,6 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
 <div id="cart-total"></div>
 
    
-    <!-- Checkout form (Nama & Alamat) -->
     <div id="checkout-form" class="checkout-form hidden">
   <label for="orderId">No. Pesanan</label>
   <input type="text" id="orderId" name="orderId" readonly style="background:#f4f4f4;">
@@ -856,7 +851,6 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
    
   </aside>
 
-  <!-- ========== SCRIPT ========== -->
   <script>
   // Replace with your WhatsApp number (international format, no + or spaces)
   const WHATSAPP_NUMBER = '601121243407'; // <-- change this
@@ -1334,6 +1328,59 @@ btn.addEventListener('click', async () => {
   }
 });
 
+/* --- START GALLERY INTEGRATION HOOK --- */
+window.addEventListener('message', (event) => {
+    // SECURITY NOTE: In a production environment, always check event.origin to ensure
+    // the message came from a trusted source (e.g., your own domain).
+    // For local file testing, we rely on the specific eventType to filter messages.
+
+    const data = event.data;
+    
+    // 1. Handle Add to Cart Event from Gallery (gallery:addToCart)
+    if (data && data.eventType === 'gallery:addToCart') {
+        const detail = data.detail;
+        
+        console.log('Gallery Add to Cart Signal Received:', detail);
+
+        const galleryProductId = 'gallery_p_' + detail.productId;
+        const galleryProductName = 'Gallery: ' + detail.productName;
+        const galleryProductPrice = detail.productPrice;
+        const galleryQuantity = detail.quantity; // Should be 1
+
+        // Use the existing global 'cart' array and functions
+        const existing = cart.find(i=>i.id===galleryProductId);
+        
+        if (existing) {
+            existing.qty += galleryQuantity;
+        } else {
+            // Add a new product to the main cart
+            cart.push({
+                id: galleryProductId,
+                name: galleryProductName,
+                price: Number(galleryProductPrice),
+                qty: galleryQuantity
+            });
+        }
+        
+        // Update the UI and storage using existing main page functions
+        saveCart();
+        updateCartUI();
+        
+        // Add visual confirmation (bounce icon)
+        const icon = document.getElementById('cart-icon');
+        icon.classList.add('added');
+        setTimeout(()=> icon.classList.remove('added'), 480);
+    }
+    
+    // 2. Handle Iframe Height Resize Event from Gallery
+    if (data.galleryHeight) {
+      const iframe = document.getElementById('galleryIframe');
+      // Set the height of the iframe to the height reported by the gallery content
+      if(iframe) iframe.style.height = data.galleryHeight + 'px';
+    }
+});
+/* --- END GALLERY INTEGRATION HOOK --- */
+
 </script>
    <script>
 document.querySelectorAll('.product-slider').forEach(slider => {
@@ -1438,7 +1485,6 @@ if ('serviceWorker' in navigator) {
 }
  </script>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-database-compat.js"></script>
 
@@ -1486,13 +1532,11 @@ uniqueRef.on("value", snap => {
 updateCounters();
 </script>
 
-<!-- Display -->
 <div style="text-align:center;margin-top:20px;font-family:sans-serif;">
   🍪 Visitors: <span id="visitorCount">0</span><br>
   🌍 Visitors International: <span id="uniqueCount">0</span>
 </div>
- <!-- 🌟 PipahCookies Install Suggestion Popup -->
-<style>
+ <style>
 #pipahInstallPopup {
   position: fixed;
   bottom: -70px;
@@ -1604,7 +1648,6 @@ function closePipahPopup() {
 }
 </script>
 
-<!-- 🌟 Footer Install Button -->
 <style>
   #footerInstallBtn {
     background: var(--primary, #A67734);
@@ -1739,15 +1782,6 @@ document.addEventListener("DOMContentLoaded", () => {
   closeBtn.addEventListener("click", () => iosPopup.classList.remove("show"));
 });
 </script>
- <script>
-  // Listen to messages from iframe (gallery.html)
-  window.addEventListener('message', function(e) {
-    if (e.data.galleryHeight) {
-      const iframe = document.getElementById('galleryIframe');
-      iframe.style.height = e.data.galleryHeight + 'px';
-    }
-  });
- </script>
  <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js')
