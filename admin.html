@@ -115,6 +115,12 @@ body {
     transition: none;
     transform: scale(0.5) translateZ(-500px); 
 }
+/* --- NEW: Greyed out effect for out-of-stock products --- */
+.card.out-of-stock {
+    filter: grayscale(100%) brightness(80%);
+    transition: filter 0.6s ease;
+}
+
 
 /* --- PRODUCT DETAIL CARD --- */
 .product-details {
@@ -132,6 +138,10 @@ body {
   width: 100%;
   box-sizing: border-box;
 }
+.product-info {
+    /* Added this to manage flex layout */
+    flex-grow: 1;
+}
 .product-name {
   font-size: 1.1rem;
   font-weight: 600;
@@ -143,6 +153,19 @@ body {
   color: var(--color-secondary);
   margin-top: 2px;
 }
+/* --- NEW: Stock Status Styling --- */
+.stock-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 2px;
+}
+.stock-available {
+    color: green;
+}
+.stock-unavailable {
+    color: red;
+}
+/* -------------------------------- */
 .add-to-cart-btn {
   background-color: var(--color-secondary);
   color: white;
@@ -154,6 +177,13 @@ body {
   cursor: pointer;
   transition: background-color 0.3s, transform 0.1s;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+/* --- NEW: Disabled Button Styling --- */
+.add-to-cart-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 .pulse-confirm {
   animation: pulse .3s;
@@ -207,6 +237,7 @@ body {
     <div class="product-info">
       <div class="product-name" id="product-name">Product Name</div>
       <div class="product-price" id="product-price">RM 0.00</div>
+      <div class="stock-status" id="stock-status"></div>
     </div>
     <button class="add-to-cart-btn" id="add-to-cart-btn">Add to Cart</button>
   </div>
@@ -227,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cards = Array.from(gallery.querySelectorAll('.card'));
   const productNameEl = document.getElementById('product-name');
   const productPriceEl = document.getElementById('product-price');
+  const stockStatusEl = document.getElementById('stock-status'); // NEW: Get stock status element
   const addToCartBtn = document.getElementById('add-to-cart-btn');
   const viewer = document.getElementById('mediaViewer');
   const viewerContent = viewer.querySelector('.viewer-content');
@@ -238,16 +270,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- VARIABLES & CONSTANTS ---
   let activeIndex = 0;
 
-  // --- PRODUCT DATA ---
+  // --- PRODUCT DATA (UPDATED with stock property) ---
   const products = [
-    { id: 1, name: 'Osaka Creampuff 20pcs', price: 10.00, isVideo: false },
-    { id: 2, name: 'Roti Golok', price: 10.00, isVideo: false },
-    { id: 3, name: 'Seasalt Cookies 65pcs', price: 16.00, isVideo: false },
-     ];
+    // SET THE 'stock' LIMIT HERE (0 means Sold Out)
+    { id: 1, name: 'Osaka Creampuff 20pcs', price: 10.00, isVideo: false, stock: 10 }, // 5 available
+    { id: 2, name: 'Roti Golok', price: 10.00, isVideo: false, stock: 10 }, // Out of Stock Example
+    { id: 3, name: 'Seasalt Cookies 65pcs', price: 16.00, isVideo: false, stock: 20 }, // 12 available
+  ];
   
-  // --- CART HOOK (Using postMessage to communicate with the parent page) ---
+  // --- CART HOOK (Updated with stock check) ---
   addToCartBtn.addEventListener('click', () => {
     const product = products[activeIndex];
+    
+    // NEW: Prevent adding to cart if stock is 0 or less
+    if (product.stock <= 0) {
+        alert('Maaf, produk ini telah habis stok.');
+        return; 
+    }
     
     // Send data to the parent window (index2.html)
     window.parent.postMessage({ 
@@ -265,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => addToCartBtn.classList.remove('pulse-confirm'), 300);
   });
   
- // --- GALLERY SLIDER FUNCTIONS ---
+ // --- GALLERY SLIDER FUNCTIONS (Updated with stock logic) ---
   function setActive(index) {
     activeIndex = (index + cards.length) % cards.length;
     
@@ -275,7 +314,11 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (i === (activeIndex + 1) % cards.length) state = 'next';
       else if (i === (activeIndex - 1 + cards.length) % cards.length) state = 'prev';
       
-      c.className = `card ${state}`;
+      // NEW: Check stock for each card to apply grey-out effect
+      const productStock = products[i] ? products[i].stock : 1; // Fallback to 1 if product data is missing
+      const stockClass = (productStock <= 0) ? ' out-of-stock' : '';
+      
+      c.className = `card ${state}${stockClass}`; // Combine classes
       
       const video = c.querySelector('video');
       if (video) {
@@ -290,6 +333,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentProduct = products[activeIndex];
     productNameEl.textContent = currentProduct.name;
     productPriceEl.textContent = `RM ${currentProduct.price.toFixed(2)}`;
+    
+    // --- NEW: Stock Check Logic for Button and Status text ---
+    const stock = currentProduct.stock;
+    
+    if (stock > 0) {
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Add to Cart';
+        stockStatusEl.className = 'stock-status stock-available';
+        stockStatusEl.textContent = `${stock} available`;
+    } else {
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = 'Sold Out';
+        stockStatusEl.className = 'stock-status stock-unavailable';
+        stockStatusEl.textContent = 'Out of Stock';
+    }
     
     if(viewer.classList.contains('show')) showViewer(activeIndex);
   }
