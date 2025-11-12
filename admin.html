@@ -349,6 +349,148 @@ document.addEventListener('DOMContentLoaded', () => {
     const endDrag = () => { 
         if(dragging){ 
             if(Math.abs(diff) > 30) onSwipe(diff < 0 ? 1 : -1);
+            dragging = false<script src="products.js"></script> 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // --- DOM ELEMENTS ---
+  const gallery = document.getElementById('gallery');
+  // FIX 1: Change to 'let' and initialize later
+  let cards; 
+  const productNameEl = document.getElementById('product-name');
+  const productPriceEl = document.getElementById('product-price');
+  const stockStatusEl = document.getElementById('stock-status'); 
+  const addToCartBtn = document.getElementById('add-to-cart-btn');
+  const viewer = document.getElementById('mediaViewer');
+  const viewerContent = viewer.querySelector('.viewer-content');
+  const viewerImg = document.getElementById('viewerImage');
+  const viewerVid = document.getElementById('viewerVideo');
+  const viewerClose = document.getElementById('viewerClose');
+  const galleryWrapper = document.getElementById('galleryWrapper');
+
+  // --- VARIABLES & CONSTANTS ---
+  let activeIndex = 0;
+
+  // FIX 2: NEW FUNCTION - Create a Card Element from product data
+  function createCard(product, index) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('data-index', index);
+      
+      let mediaElement;
+      if (product.isVideo) {
+          mediaElement = document.createElement('video');
+          mediaElement.src = product.mediaUrl;
+          mediaElement.alt = index + 1;
+          mediaElement.controls = false; 
+          mediaElement.loop = true;
+          mediaElement.muted = true;
+          mediaElement.playsInline = true;
+          mediaElement.webkitPlaysInline = true;
+      } else {
+          mediaElement = document.createElement('img');
+          mediaElement.src = product.mediaUrl;
+          mediaElement.alt = index + 1;
+      }
+      
+      card.appendChild(mediaElement);
+      return card;
+  }
+  
+  // FIX 3: NEW FUNCTION - Initialize Gallery Cards from products.js
+  function initializeGallery() {
+      // 'products' is the global variable loaded from products.js
+      products.forEach((product, index) => {
+          const card = createCard(product, index);
+          gallery.appendChild(card);
+      });
+      // CRUCIAL: Select the newly generated cards into the 'cards' array
+      cards = Array.from(gallery.querySelectorAll('.card')); 
+  }
+  
+  // --- CART HOOK (No change) ---
+  addToCartBtn.addEventListener('click', () => {
+    const product = products[activeIndex];
+    
+    // ... (rest of cart hook logic) ...
+    if (product.stock <= 0) {
+        alert('Maaf, produk ini telah habis stok.');
+        return; 
+    }
+    
+    window.parent.postMessage({ 
+        eventType: 'gallery:addToCart',
+        detail: { 
+            productId: product.id, 
+            productName: 'Gallery: ' + product.name, 
+            productPrice: product.price, 
+            quantity: 1
+        } 
+    }, '*');
+    
+    addToCartBtn.classList.add('pulse-confirm');
+    setTimeout(() => addToCartBtn.classList.remove('pulse-confirm'), 300);
+  });
+  
+ // --- GALLERY SLIDER FUNCTIONS (Updated with stock logic) ---
+  function setActive(index) {
+    // This line now uses the correctly populated 'cards' array
+    activeIndex = (index + cards.length) % cards.length; 
+    
+    cards.forEach((c, i) => {
+      let state = 'hidden';
+      if (i === activeIndex) state = 'active';
+      else if (i === (activeIndex + 1) % cards.length) state = 'next';
+      else if (i === (activeIndex - 1 + cards.length) % cards.length) state = 'prev';
+      
+      // Check stock for each card
+      const productStock = products[i] ? products[i].stock : 1;
+      const stockClass = (productStock <= 0) ? ' out-of-stock' : '';
+      
+      c.className = `card ${state}${stockClass}`;
+      
+      const video = c.querySelector('video');
+      if (video) {
+        if (i === activeIndex) {
+            video.play().catch(()=>{});
+        } else {
+            video.pause();
+        }
+      }
+    });
+    
+    const currentProduct = products[activeIndex];
+    
+    // FIX 4: NO DISCOUNT LOGIC NEEDED. Price display uses the price directly from products.js
+    productNameEl.textContent = currentProduct.name;
+    productPriceEl.textContent = `RM ${currentProduct.price.toFixed(2)}`;
+    
+    // --- Stock Check Logic ---
+    const stock = currentProduct.stock;
+    
+    if (stock > 0) {
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Add to Cart';
+        stockStatusEl.className = 'stock-status stock-available';
+        stockStatusEl.textContent = `${stock} available`;
+    } else {
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = 'Sold Out';
+        stockStatusEl.className = 'stock-status stock-unavailable';
+        stockStatusEl.textContent = 'Out of Stock';
+    }
+    
+    if(viewer.classList.contains('show')) showViewer(activeIndex);
+  }
+
+  // --- Drag/Swipe Control ---
+  function dragControl(container, onSwipe){
+    let dragging = false, startX = 0, diff = 0;
+    
+    const startDrag = (clientX) => { dragging = true; startX = clientX; container.style.cursor = 'grabbing'; };
+    const moveDrag = (clientX) => { if(dragging) diff = clientX - startX; };
+    const endDrag = () => { 
+        if(dragging){ 
+            if(Math.abs(diff) > 30) onSwipe(diff < 0 ? 1 : -1);
             dragging = false; diff = 0; 
         }
         container.style.cursor = 'grab';
@@ -382,7 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
       viewerImg.style.display = 'block';
     }
     if(media.tagName === 'VIDEO'){
-      const videoSrc = media.currentSrc || media.src; 
+      // Use media.src from the dynamically created element
+      const videoSrc = media.src; 
       viewerVid.src = videoSrc;
       viewerVid.style.display = 'block';
       viewerVid.load();
@@ -414,22 +557,19 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // --- Auto-resize Iframe (for parent page scroll) ---
   function resizeIframe() {
-    // Get the total height of the gallery content
     const height = galleryWrapper.offsetHeight; 
-    
-    // Send the height to the parent window
     window.parent.postMessage({ galleryHeight: height }, '*');
   }
 
   // --- Initialization ---
+  // FIX 5: Initialize the gallery and cards FIRST
+  initializeGallery();
   setActive(0);
-  // Initial resize
+  
   resizeIframe();
-  // Re-resize on window events (e.g., orientation change or product detail change)
   window.addEventListener('resize', resizeIframe);
   
 });
 </script>
-  
 </body>
 </html>
