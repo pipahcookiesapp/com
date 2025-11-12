@@ -8,6 +8,6 @@ const products = [
     // --- NEW PLACEHOLDER SLOTS (Set to 0 stock) ---
     { id: 4, name: 'New Product Slot 4', price: 0.00, isVideo: false, stock: 0, mediaUrl: 'Images/item4.jpg' },
     { id: 5, name: 'New Product Slot 5', price: 0.00, isVideo: false, stock: 0, mediaUrl: 'Images/item5.jpg' },
-    { id: 6, name: 'Kek Choc Moist 4`', price: 10.00, isVideo: false, stock: 0, mediaUrl: 'Images/cm1.jpg' }
+    { id: 6, name: 'Kek Choc Moist 4`', price: 10.00, isVideo: false, stock: 10, mediaUrl: 'Images/cm1.jpg' }
 ];
 // --- END OF PRODUCT DATA ---
