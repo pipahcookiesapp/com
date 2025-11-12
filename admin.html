@@ -551,6 +551,204 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   viewerClose.addEventListener('click', closeViewer);
+<script src="products.js"></script> 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // --- DOM ELEMENTS ---
+  const gallery = document.getElementById('gallery');
+  // FIX 1: Change to 'let' because it is populated by initializeGallery
+  let cards; 
+  const productNameEl = document.getElementById('product-name');
+  const productPriceEl = document.getElementById('product-price');
+  const stockStatusEl = document.getElementById('stock-status'); 
+  const addToCartBtn = document.getElementById('add-to-cart-btn');
+  const viewer = document.getElementById('mediaViewer');
+  const viewerContent = viewer.querySelector('.viewer-content');
+  const viewerImg = document.getElementById('viewerImage');
+  const viewerVid = document.getElementById('viewerVideo');
+  const viewerClose = document.getElementById('viewerClose');
+  const galleryWrapper = document.getElementById('galleryWrapper');
+
+  // --- VARIABLES & CONSTANTS ---
+  let activeIndex = 0;
+
+  // FIX 2: NEW FUNCTION - Create a Card Element from product data
+  function createCard(product, index) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('data-index', index);
+      
+      let mediaElement;
+      // Use the isVideo and mediaUrl properties from products.js
+      if (product.isVideo) {
+          mediaElement = document.createElement('video');
+          mediaElement.src = product.mediaUrl;
+          mediaElement.alt = index + 1;
+          mediaElement.controls = false; 
+          mediaElement.loop = true;
+          mediaElement.muted = true;
+          mediaElement.playsInline = true;
+          mediaElement.webkitPlaysInline = true;
+      } else {
+          mediaElement = document.createElement('img');
+          mediaElement.src = product.mediaUrl;
+          mediaElement.alt = index + 1;
+      }
+      
+      card.appendChild(mediaElement);
+      return card;
+  }
+  
+  // FIX 3: NEW FUNCTION - Initialize Gallery Cards from products.js
+  function initializeGallery() {
+      // 'products' is the global variable loaded from products.js
+      products.forEach((product, index) => {
+          const card = createCard(product, index);
+          gallery.appendChild(card);
+      });
+      // CRUCIAL: Select the newly generated cards into the 'cards' array
+      cards = Array.from(gallery.querySelectorAll('.card')); 
+  }
+  
+  // --- CART HOOK (No change) ---
+  addToCartBtn.addEventListener('click', () => {
+    const product = products[activeIndex];
+    
+    if (product.stock <= 0) {
+        alert('Maaf, produk ini telah habis stok.');
+        return; 
+    }
+    
+    window.parent.postMessage({ 
+        eventType: 'gallery:addToCart',
+        detail: { 
+            productId: product.id, 
+            productName: 'Gallery: ' + product.name, 
+            productPrice: product.price, 
+            quantity: 1
+        } 
+    }, '*');
+    
+    addToCartBtn.classList.add('pulse-confirm');
+    setTimeout(() => addToCartBtn.classList.remove('pulse-confirm'), 300);
+  });
+  
+ // --- GALLERY SLIDER FUNCTIONS (Updated with stock logic) ---
+  function setActive(index) {
+    activeIndex = (index + cards.length) % cards.length; 
+    
+    cards.forEach((c, i) => {
+      let state = 'hidden';
+      if (i === activeIndex) state = 'active';
+      else if (i === (activeIndex + 1) % cards.length) state = 'next';
+      else if (i === (activeIndex - 1 + cards.length) % cards.length) state = 'prev';
+      
+      const productStock = products[i] ? products[i].stock : 1;
+      const stockClass = (productStock <= 0) ? ' out-of-stock' : '';
+      
+      c.className = `card ${state}${stockClass}`;
+      
+      const video = c.querySelector('video');
+      if (video) {
+        if (i === activeIndex) {
+            video.play().catch(()=>{});
+        } else {
+            video.pause();
+        }
+      }
+    });
+    
+    const currentProduct = products[activeIndex];
+    
+    productNameEl.textContent = currentProduct.name;
+    productPriceEl.textContent = `RM ${currentProduct.price.toFixed(2)}`;
+    
+    // --- Stock Check Logic ---
+    const stock = currentProduct.stock;
+    
+    if (stock > 0) {
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Add to Cart';
+        stockStatusEl.className = 'stock-status stock-available';
+        stockStatusEl.textContent = `${stock} available`;
+    } else {
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = 'Sold Out';
+        stockStatusEl.className = 'stock-status stock-unavailable';
+        stockStatusEl.textContent = 'Out of Stock';
+    }
+    
+    if(viewer.classList.contains('show')) showViewer(activeIndex);
+  }
+
+  // --- Drag/Swipe Control (Complete and corrected) ---
+  function dragControl(container, onSwipe){
+    let dragging = false, startX = 0, diff = 0;
+    
+    const startDrag = (clientX) => { dragging = true; startX = clientX; container.style.cursor = 'grabbing'; };
+    const moveDrag = (clientX) => { if(dragging) diff = clientX - startX; };
+    const endDrag = () => { 
+        if(dragging){ 
+            if(Math.abs(diff) > 30) onSwipe(diff < 0 ? 1 : -1);
+            dragging = false; diff = 0; 
+        }
+        container.style.cursor = 'grab';
+    };
+
+    container.addEventListener('touchstart', e => startDrag(e.touches[0].clientX), {passive: true});
+    container.addEventListener('touchmove', e => moveDrag(e.touches[0].clientX), {passive: true});
+    container.addEventListener('touchend', endDrag);
+
+    container.addEventListener('mousedown', e => { startDrag(e.clientX); e.preventDefault(); });
+    container.addEventListener('mousemove', e => moveDrag(e.clientX));
+    container.addEventListener('mouseup', endDrag);
+    container.addEventListener('mouseleave', () => { dragging = false; diff = 0; container.style.cursor = 'grab'; });
+  }
+
+  dragControl(gallery, d => setActive(activeIndex + d));
+  dragControl(viewerContent, d => setActive(activeIndex + d));
+
+  // --- VIEWER (Zoom) FUNCTIONS ---
+  function showViewer(index){
+    const media = cards[index].querySelector('img, video');
+    if(!media) return;
+
+    viewerImg.style.display = 'none';
+    viewerVid.style.display = 'none';
+    viewerVid.pause();
+    
+    if(media.tagName === 'IMG') {
+      viewerImg.src = media.src;
+      viewerImg.alt = media.alt;
+      viewerImg.style.display = 'block';
+    }
+    if(media.tagName === 'VIDEO'){
+      const videoSrc = media.src; 
+      viewerVid.src = videoSrc;
+      viewerVid.style.display = 'block';
+      viewerVid.load();
+      viewerVid.play().catch(e => console.log('Video play failed:', e));
+    }
+  }
+
+  function openViewer(index){
+    viewer.classList.add('show');
+    setActive(index);
+  }
+
+  function closeViewer(){
+    viewer.classList.remove('show');
+    viewerVid.pause();
+    viewerVid.removeAttribute('src'); 
+    viewerVid.load();
+  }
+
+  gallery.addEventListener('click', (e) => {
+    const activeCard = e.target.closest('.card.active');
+    if (activeCard) openViewer(activeIndex);
+  });
+  
+  viewerClose.addEventListener('click', closeViewer);
   viewer.addEventListener('click', e => { 
     if(e.target === viewer || e.target === viewerClose) closeViewer(); 
   });
@@ -562,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Initialization ---
-  // FIX 5: Initialize the gallery and cards FIRST
+  // FIX 4: Initialize the gallery and cards FIRST before calling setActive
   initializeGallery();
   setActive(0);
   
@@ -571,5 +769,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
 });
 </script>
+  
 </body>
 </html>
