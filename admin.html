@@ -225,7 +225,9 @@ body {
   <div class="gallery-title">Jualan Harian</div>
   <div class="gallery-description">*LIMITED stok! untuk checkout pilih saje pickup atau COD(lala/grab), tq, Jemput santai cuci mata 😉</div>
 
-  <div class="gallery-container" id="gallery">
+  <div class="gallery-section">
+    <div class="gallery-container" id="gallery">
+      </div>
   </div>
 
   <div class="product-details">
@@ -246,318 +248,12 @@ body {
   </div>
 </div>
 
-<script src="products.js"></script> <script>
-document.addEventListener('DOMContentLoaded', () => {
-// ...
-
-  const gallery = document.getElementById('gallery');
-  const cards = Array.from(gallery.querySelectorAll('.card'));
-  const productNameEl = document.getElementById('product-name');
-  const productPriceEl = document.getElementById('product-price');
-  const stockStatusEl = document.getElementById('stock-status'); // NEW: Get stock status element
-  const addToCartBtn = document.getElementById('add-to-cart-btn');
-  const viewer = document.getElementById('mediaViewer');
-  const viewerContent = viewer.querySelector('.viewer-content');
-  const viewerImg = document.getElementById('viewerImage');
-  const viewerVid = document.getElementById('viewerVideo');
-  const viewerClose = document.getElementById('viewerClose');
-  const galleryWrapper = document.getElementById('galleryWrapper');
-
-  // --- VARIABLES & CONSTANTS ---
-  let activeIndex = 0;
-  
-  // --- CART HOOK (Updated with stock check) ---
-  addToCartBtn.addEventListener('click', () => {
-    const product = products[activeIndex];
-    
-    // NEW: Prevent adding to cart if stock is 0 or less
-    if (product.stock <= 0) {
-        alert('Maaf, produk ini telah habis stok.');
-        return; 
-    }
-    
-    // Send data to the parent window (index2.html)
-    window.parent.postMessage({ 
-        eventType: 'gallery:addToCart',
-        detail: { 
-            productId: product.id, 
-            productName: 'Gallery: ' + product.name, // Prefix name to differentiate
-            productPrice: product.price, 
-            quantity: 1
-        } 
-    }, '*'); // '*' means any origin. Use a specific origin for production security.
-    
-    // Add a simple pulse/flash animation to confirm the click
-    addToCartBtn.classList.add('pulse-confirm');
-    setTimeout(() => addToCartBtn.classList.remove('pulse-confirm'), 300);
-  });
-  
- // --- GALLERY SLIDER FUNCTIONS (Updated with stock logic) ---
-  function setActive(index) {
-    activeIndex = (index + cards.length) % cards.length;
-    
-    cards.forEach((c, i) => {
-      let state = 'hidden';
-      if (i === activeIndex) state = 'active';
-      else if (i === (activeIndex + 1) % cards.length) state = 'next';
-      else if (i === (activeIndex - 1 + cards.length) % cards.length) state = 'prev';
-      
-      // NEW: Check stock for each card to apply grey-out effect
-      const productStock = products[i] ? products[i].stock : 1; // Fallback to 1 if product data is missing
-      const stockClass = (productStock <= 0) ? ' out-of-stock' : '';
-      
-      c.className = `card ${state}${stockClass}`; // Combine classes
-      
-      const video = c.querySelector('video');
-      if (video) {
-        if (i === activeIndex) {
-            video.play().catch(()=>{});
-        } else {
-            video.pause();
-        }
-      }
-    });
-    
-    const currentProduct = products[activeIndex];
-    productNameEl.textContent = currentProduct.name;
-    productPriceEl.textContent = `RM ${currentProduct.price.toFixed(2)}`;
-    
-    // --- NEW: Stock Check Logic for Button and Status text ---
-    const stock = currentProduct.stock;
-    
-    if (stock > 0) {
-        addToCartBtn.disabled = false;
-        addToCartBtn.textContent = 'Add to Cart';
-        stockStatusEl.className = 'stock-status stock-available';
-        stockStatusEl.textContent = `${stock} available`;
-    } else {
-        addToCartBtn.disabled = true;
-        addToCartBtn.textContent = 'Sold Out';
-        stockStatusEl.className = 'stock-status stock-unavailable';
-        stockStatusEl.textContent = 'Out of Stock';
-    }
-    
-    if(viewer.classList.contains('show')) showViewer(activeIndex);
-  }
-
-  // --- Drag/Swipe Control ---
-  function dragControl(container, onSwipe){
-    let dragging = false, startX = 0, diff = 0;
-    
-    const startDrag = (clientX) => { dragging = true; startX = clientX; container.style.cursor = 'grabbing'; };
-    const moveDrag = (clientX) => { if(dragging) diff = clientX - startX; };
-    const endDrag = () => { 
-        if(dragging){ 
-            if(Math.abs(diff) > 30) onSwipe(diff < 0 ? 1 : -1);
-            dragging = false<script src="products.js"></script> 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // --- DOM ELEMENTS ---
-  const gallery = document.getElementById('gallery');
-  // FIX 1: Change to 'let' and initialize later
-  let cards; 
-  const productNameEl = document.getElementById('product-name');
-  const productPriceEl = document.getElementById('product-price');
-  const stockStatusEl = document.getElementById('stock-status'); 
-  const addToCartBtn = document.getElementById('add-to-cart-btn');
-  const viewer = document.getElementById('mediaViewer');
-  const viewerContent = viewer.querySelector('.viewer-content');
-  const viewerImg = document.getElementById('viewerImage');
-  const viewerVid = document.getElementById('viewerVideo');
-  const viewerClose = document.getElementById('viewerClose');
-  const galleryWrapper = document.getElementById('galleryWrapper');
-
-  // --- VARIABLES & CONSTANTS ---
-  let activeIndex = 0;
-
-  // FIX 2: NEW FUNCTION - Create a Card Element from product data
-  function createCard(product, index) {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.setAttribute('data-index', index);
-      
-      let mediaElement;
-      if (product.isVideo) {
-          mediaElement = document.createElement('video');
-          mediaElement.src = product.mediaUrl;
-          mediaElement.alt = index + 1;
-          mediaElement.controls = false; 
-          mediaElement.loop = true;
-          mediaElement.muted = true;
-          mediaElement.playsInline = true;
-          mediaElement.webkitPlaysInline = true;
-      } else {
-          mediaElement = document.createElement('img');
-          mediaElement.src = product.mediaUrl;
-          mediaElement.alt = index + 1;
-      }
-      
-      card.appendChild(mediaElement);
-      return card;
-  }
-  
-  // FIX 3: NEW FUNCTION - Initialize Gallery Cards from products.js
-  function initializeGallery() {
-      // 'products' is the global variable loaded from products.js
-      products.forEach((product, index) => {
-          const card = createCard(product, index);
-          gallery.appendChild(card);
-      });
-      // CRUCIAL: Select the newly generated cards into the 'cards' array
-      cards = Array.from(gallery.querySelectorAll('.card')); 
-  }
-  
-  // --- CART HOOK (No change) ---
-  addToCartBtn.addEventListener('click', () => {
-    const product = products[activeIndex];
-    
-    // ... (rest of cart hook logic) ...
-    if (product.stock <= 0) {
-        alert('Maaf, produk ini telah habis stok.');
-        return; 
-    }
-    
-    window.parent.postMessage({ 
-        eventType: 'gallery:addToCart',
-        detail: { 
-            productId: product.id, 
-            productName: 'Gallery: ' + product.name, 
-            productPrice: product.price, 
-            quantity: 1
-        } 
-    }, '*');
-    
-    addToCartBtn.classList.add('pulse-confirm');
-    setTimeout(() => addToCartBtn.classList.remove('pulse-confirm'), 300);
-  });
-  
- // --- GALLERY SLIDER FUNCTIONS (Updated with stock logic) ---
-  function setActive(index) {
-    // This line now uses the correctly populated 'cards' array
-    activeIndex = (index + cards.length) % cards.length; 
-    
-    cards.forEach((c, i) => {
-      let state = 'hidden';
-      if (i === activeIndex) state = 'active';
-      else if (i === (activeIndex + 1) % cards.length) state = 'next';
-      else if (i === (activeIndex - 1 + cards.length) % cards.length) state = 'prev';
-      
-      // Check stock for each card
-      const productStock = products[i] ? products[i].stock : 1;
-      const stockClass = (productStock <= 0) ? ' out-of-stock' : '';
-      
-      c.className = `card ${state}${stockClass}`;
-      
-      const video = c.querySelector('video');
-      if (video) {
-        if (i === activeIndex) {
-            video.play().catch(()=>{});
-        } else {
-            video.pause();
-        }
-      }
-    });
-    
-    const currentProduct = products[activeIndex];
-    
-    // FIX 4: NO DISCOUNT LOGIC NEEDED. Price display uses the price directly from products.js
-    productNameEl.textContent = currentProduct.name;
-    productPriceEl.textContent = `RM ${currentProduct.price.toFixed(2)}`;
-    
-    // --- Stock Check Logic ---
-    const stock = currentProduct.stock;
-    
-    if (stock > 0) {
-        addToCartBtn.disabled = false;
-        addToCartBtn.textContent = 'Add to Cart';
-        stockStatusEl.className = 'stock-status stock-available';
-        stockStatusEl.textContent = `${stock} available`;
-    } else {
-        addToCartBtn.disabled = true;
-        addToCartBtn.textContent = 'Sold Out';
-        stockStatusEl.className = 'stock-status stock-unavailable';
-        stockStatusEl.textContent = 'Out of Stock';
-    }
-    
-    if(viewer.classList.contains('show')) showViewer(activeIndex);
-  }
-
-  // --- Drag/Swipe Control ---
-  function dragControl(container, onSwipe){
-    let dragging = false, startX = 0, diff = 0;
-    
-    const startDrag = (clientX) => { dragging = true; startX = clientX; container.style.cursor = 'grabbing'; };
-    const moveDrag = (clientX) => { if(dragging) diff = clientX - startX; };
-    const endDrag = () => { 
-        if(dragging){ 
-            if(Math.abs(diff) > 30) onSwipe(diff < 0 ? 1 : -1);
-            dragging = false; diff = 0; 
-        }
-        container.style.cursor = 'grab';
-    };
-
-    container.addEventListener('touchstart', e => startDrag(e.touches[0].clientX), {passive: true});
-    container.addEventListener('touchmove', e => moveDrag(e.touches[0].clientX), {passive: true});
-    container.addEventListener('touchend', endDrag);
-
-    container.addEventListener('mousedown', e => { startDrag(e.clientX); e.preventDefault(); });
-    container.addEventListener('mousemove', e => moveDrag(e.clientX));
-    container.addEventListener('mouseup', endDrag);
-    container.addEventListener('mouseleave', () => { dragging = false; diff = 0; container.style.cursor = 'grab'; });
-  }
-
-  dragControl(gallery, d => setActive(activeIndex + d));
-  dragControl(viewerContent, d => setActive(activeIndex + d));
-
-  // --- VIEWER (Zoom) FUNCTIONS ---
-  function showViewer(index){
-    const media = cards[index].querySelector('img, video');
-    if(!media) return;
-
-    viewerImg.style.display = 'none';
-    viewerVid.style.display = 'none';
-    viewerVid.pause();
-    
-    if(media.tagName === 'IMG') {
-      viewerImg.src = media.src;
-      viewerImg.alt = media.alt;
-      viewerImg.style.display = 'block';
-    }
-    if(media.tagName === 'VIDEO'){
-      // Use media.src from the dynamically created element
-      const videoSrc = media.src; 
-      viewerVid.src = videoSrc;
-      viewerVid.style.display = 'block';
-      viewerVid.load();
-      viewerVid.play().catch(e => console.log('Video play failed:', e));
-    }
-  }
-
-  function openViewer(index){
-    viewer.classList.add('show');
-    setActive(index);
-  }
-
-  function closeViewer(){
-    viewer.classList.remove('show');
-    viewerVid.pause();
-    viewerVid.removeAttribute('src'); 
-    viewerVid.load();
-  }
-
-  gallery.addEventListener('click', (e) => {
-    const activeCard = e.target.closest('.card.active');
-    if (activeCard) openViewer(activeIndex);
-  });
-  
-  viewerClose.addEventListener('click', closeViewer);
 <script src="products.js"></script> 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   // --- DOM ELEMENTS ---
   const gallery = document.getElementById('gallery');
-  // FIX 1: Change to 'let' because it is populated by initializeGallery
-  let cards; 
+  let cards; // Will be populated by initializeGallery
   const productNameEl = document.getElementById('product-name');
   const productPriceEl = document.getElementById('product-price');
   const stockStatusEl = document.getElementById('stock-status'); 
@@ -572,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- VARIABLES & CONSTANTS ---
   let activeIndex = 0;
 
-  // FIX 2: NEW FUNCTION - Create a Card Element from product data
+  // FUNCTION: Create a Card Element from product data
   function createCard(product, index) {
       const card = document.createElement('div');
       card.className = 'card';
@@ -599,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return card;
   }
   
-  // FIX 3: NEW FUNCTION - Initialize Gallery Cards from products.js
+  // FUNCTION: Initialize Gallery Cards from products.js
   function initializeGallery() {
       // 'products' is the global variable loaded from products.js
       products.forEach((product, index) => {
@@ -610,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cards = Array.from(gallery.querySelectorAll('.card')); 
   }
   
-  // --- CART HOOK (No change) ---
+  // --- CART HOOK ---
   addToCartBtn.addEventListener('click', () => {
     const product = products[activeIndex];
     
@@ -619,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return; 
     }
     
+    // Sends the base price from products.js (0% discount)
     window.parent.postMessage({ 
         eventType: 'gallery:addToCart',
         detail: { 
@@ -633,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => addToCartBtn.classList.remove('pulse-confirm'), 300);
   });
   
- // --- GALLERY SLIDER FUNCTIONS (Updated with stock logic) ---
+ // --- GALLERY SLIDER FUNCTIONS ---
   function setActive(index) {
     activeIndex = (index + cards.length) % cards.length; 
     
@@ -661,7 +358,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentProduct = products[activeIndex];
     
     productNameEl.textContent = currentProduct.name;
-    productPriceEl.textContent = `RM ${currentProduct.price.toFixed(2)}`;
+    // Price display uses the original price (0% discount)
+    productPriceEl.textContent = `RM ${currentProduct.price.toFixed(2)}`; 
     
     // --- Stock Check Logic ---
     const stock = currentProduct.stock;
@@ -681,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(viewer.classList.contains('show')) showViewer(activeIndex);
   }
 
-  // --- Drag/Swipe Control (Complete and corrected) ---
+  // --- Drag/Swipe Control ---
   function dragControl(container, onSwipe){
     let dragging = false, startX = 0, diff = 0;
     
@@ -760,7 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Initialization ---
-  // FIX 4: Initialize the gallery and cards FIRST before calling setActive
   initializeGallery();
   setActive(0);
   
@@ -769,6 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
 });
 </script>
-  
 </body>
 </html>
+
