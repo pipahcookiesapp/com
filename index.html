@@ -368,6 +368,24 @@
       }
     }
   </style>
+ <style>
+/* ... your other CSS styles here ... */
+
+/* --- Responsive Iframe Styles --- */
+
+/* Base style: Applied to all screens (Phone view) */
+.gallery-iframe {
+    height: 400px; /* Phone height */
+}
+
+/* Media Query: Overrides height for screens wider than 600 pixels (Tablet/Desktop view) */
+@media (min-width: 600px) {
+    .gallery-iframe {
+        height: 600px; /* Desktop height */
+    }
+}
+ </style>
+ 
 </head>
 <body>
 
@@ -683,9 +701,22 @@ Hai kami dari Pipah Cookies sudah beroperasi sejak 2020, Kami menjual produk bak
   </section>
   
          
-<section id="gallery" style="background-color: #fafafa; padding: 60px 0;">
- <p> sila swipe dan tap untuk buka </p>
-  <iframe src="3dGallery.html" width="400" height="400" style="border:none;"></iframe>
+<section id="gallery" style="background-color: #fafafa; padding: 60px 0; text-align: center;">
+    <p> sila swipe dan tap untuk buka </p>
+    <iframe 
+        src="3dGallery.html" 
+        class="gallery-iframe"
+        style="
+            border: none; 
+            width: 100%; 
+            max-width: 1000px; /* Limits max width on huge screens */
+            display: block; 
+            margin: 0 auto; /* Centers the iframe horizontally */
+        "
+        title="3D Product Gallery"
+        scrolling="no"
+    ></iframe>
+</section>
 
 </section>
     <section id="gallery">
