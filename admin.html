@@ -29,7 +29,8 @@ body {
 
 .gallery-wrapper {
   text-align: center;
-  max-width: 380px; 
+  /* SCALING CHANGE: Allow expansion up to 1200px */
+  max-width: 1200px; 
   position: relative; 
   padding: 0 10px;
   box-sizing: border-box;
@@ -37,15 +38,17 @@ body {
   min-height: 500px; 
 }
 .gallery-title {
-  font-size: 1.6rem;
+  /* SCALING CHANGE: Font size scales with viewport width (vw) */
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
   font-weight: 700;
   color: var(--color-primary);
   margin-bottom: 6px;
 }
 .gallery-description {
-  font-size: 0.85rem;
+  /* SCALING CHANGE: Font size scales with viewport width (vw) */
+  font-size: clamp(0.85rem, 1.5vw, 1.1rem);
   color: #7b7060;
-  margin: 0 0 20px 0;
+  margin: 0 0 30px 0;
   line-height: 1.4;
 }
 
@@ -55,14 +58,14 @@ body {
     justify-content: center;
     align-items: flex-start; 
     width: 100%;
-    max-width: 380px;
     position: relative;
 }
 .gallery-container {
-  perspective: 1500px;
-  width: 100%;
-  max-width: 330px;
-  height: 220px;
+  /* SCALING CHANGE: Perspective increased for deeper 3D effect on large screen */
+  perspective: 2000px;
+  /* SCALING CHANGE: Width and height scale with viewport width (vw) */
+  width: clamp(330px, 60vw, 800px); 
+  height: clamp(220px, 40vw, 550px);
   position: relative;
   overflow: visible;
   touch-action: pan-y;
@@ -89,16 +92,18 @@ body {
   object-fit: cover;
   display: block;
 }
+/* SCALING CHANGE: Increased separation and rotation for wider views */
 .card.prev {
-    transform: translateX(-70%) translateZ(-300px) rotateY(25deg) scale(0.9);
+    transform: translateX(-100%) translateZ(-500px) rotateY(35deg) scale(0.9);
     opacity: 0.6;
-    filter: blur(3px);
+    filter: blur(5px);
     z-index: 0;
 }
+/* SCALING CHANGE: Increased separation and rotation for wider views */
 .card.next {
-    transform: translateX(70%) translateZ(-300px) rotateY(-25deg) scale(0.9);
+    transform: translateX(100%) translateZ(-500px) rotateY(-35deg) scale(0.9);
     opacity: 0.6;
-    filter: blur(3px);
+    filter: blur(5px);
     z-index: 0;
 }
 .card.active {
@@ -107,15 +112,15 @@ body {
     filter: blur(0);
     z-index: 2; 
     cursor: grab;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 .card.hidden {
     opacity: 0; 
     pointer-events: none; 
     transition: none;
-    transform: scale(0.5) translateZ(-500px); 
+    transform: scale(0.5) translateZ(-800px); 
 }
-/* --- NEW: Greyed out effect for out-of-stock products --- */
+/* --- Greyed out effect for out-of-stock products --- */
 .card.out-of-stock {
     filter: grayscale(100%) brightness(80%);
     transition: filter 0.6s ease;
@@ -127,35 +132,41 @@ body {
   background: var(--color-card-bg);
   backdrop-filter: blur(8px);
   border-radius: 12px;
-  margin-top: 15px;
-  padding: 10px 15px;
+  margin-top: 30px;
+  padding: 15px 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.5);
-  min-height: 60px;
+  min-height: 80px;
   width: 100%;
   box-sizing: border-box;
+  /* SCALING CHANGE: Max width matches the gallery container width */
+  max-width: clamp(330px, 60vw, 800px); 
+  margin-left: auto;
+  margin-right: auto;
 }
 .product-info {
-    /* Added this to manage flex layout */
     flex-grow: 1;
 }
 .product-name {
-  font-size: 1.1rem;
+  /* SCALING CHANGE: Font size scales */
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
   font-weight: 600;
   color: var(--color-primary);
 }
 .product-price {
-  font-size: 1.4rem;
+  /* SCALING CHANGE: Font size scales */
+  font-size: clamp(1.4rem, 2.5vw, 2.2rem);
   font-weight: 700;
   color: var(--color-secondary);
   margin-top: 2px;
 }
-/* --- NEW: Stock Status Styling --- */
+/* --- Stock Status Styling --- */
 .stock-status {
-    font-size: 0.8rem;
+    /* SCALING CHANGE: Font size scales */
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
     font-weight: 600;
     margin-top: 2px;
 }
@@ -171,19 +182,23 @@ body {
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 10px 18px;
-  font-size: 0.9rem;
+  padding: 12px 25px;
+  /* SCALING CHANGE: Font size scales */
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.1s;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  margin-left: 20px;
 }
-/* --- NEW: Disabled Button Styling --- */
 .add-to-cart-btn:disabled {
     background-color: #ccc;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+.add-to-cart-btn:hover:enabled {
+    background-color: #8c602b;
 }
 .pulse-confirm {
   animation: pulse .3s;
@@ -298,6 +313,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // FUNCTION: Initialize Gallery Cards from products.js
   function initializeGallery() {
       // 'products' is the global variable loaded from products.js
+      // NOTE: 'products' array must be defined in the external products.js file
+      if (typeof products === 'undefined' || products.length === 0) {
+        console.error("products.js is missing or empty. Cannot initialize gallery.");
+        return;
+      }
+      
       products.forEach((product, index) => {
           const card = createCard(product, index);
           gallery.appendChild(card);
@@ -332,6 +353,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
  // --- GALLERY SLIDER FUNCTIONS ---
   function setActive(index) {
+    if (!cards || cards.length === 0) return;
+    
     activeIndex = (index + cards.length) % cards.length; 
     
     cards.forEach((c, i) => {
@@ -454,12 +477,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Auto-resize Iframe (for parent page scroll) ---
   function resizeIframe() {
     const height = galleryWrapper.offsetHeight; 
+    // This postMessage assumes the gallery is embedded in an iframe on a parent page.
     window.parent.postMessage({ galleryHeight: height }, '*');
   }
 
   // --- Initialization ---
   initializeGallery();
-  setActive(0);
+  if (cards && cards.length > 0) {
+    setActive(0);
+  } else {
+    // Fallback if no products are loaded
+    productNameEl.textContent = 'No Products Loaded';
+    productPriceEl.textContent = 'RM 0.00';
+    stockStatusEl.textContent = 'Please check products.js';
+    addToCartBtn.disabled = true;
+    addToCartBtn.textContent = 'Unavailable';
+  }
   
   resizeIframe();
   window.addEventListener('resize', resizeIframe);
@@ -468,4 +501,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
