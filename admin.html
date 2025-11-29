@@ -1,503 +1,598 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PipahCookies Elegant 3D Gallery (External Cart)</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-/* --- THEME COLORS --- */
-:root {
-  --color-primary: #5a4f3c; /* Deep Brown Text */
-  --color-secondary: #A67734; /* Cookie Orange/Highlight */
-  --color-background: #f7f3ee; /* Soft Beige */
-  --color-card-bg: rgba(255, 255, 255, 0.7); /* Transparent Card */
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipah Admin 5.0 Pro (Tier + MOQ)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 
-/* --- GENERAL & LAYOUT --- */
-body {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: var(--color-background); 
-  font-family: 'Poppins', sans-serif;
-  color: var(--color-primary);
-  width: 100%;
-}
-
-.gallery-wrapper {
-  text-align: center;
-  /* SCALING CHANGE: Allow expansion up to 1200px */
-  max-width: 1200px; 
-  position: relative; 
-  padding: 0 10px;
-  box-sizing: border-box;
-  width: 100%; 
-  min-height: 500px; 
-}
-.gallery-title {
-  /* SCALING CHANGE: Font size scales with viewport width (vw) */
-  font-size: clamp(1.6rem, 4vw, 2.5rem);
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-bottom: 6px;
-}
-.gallery-description {
-  /* SCALING CHANGE: Font size scales with viewport width (vw) */
-  font-size: clamp(0.85rem, 1.5vw, 1.1rem);
-  color: #7b7060;
-  margin: 0 0 30px 0;
-  line-height: 1.4;
-}
-
-/* --- GALLERY SECTION --- */
-.gallery-section {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; 
-    width: 100%;
-    position: relative;
-}
-.gallery-container {
-  /* SCALING CHANGE: Perspective increased for deeper 3D effect on large screen */
-  perspective: 2000px;
-  /* SCALING CHANGE: Width and height scale with viewport width (vw) */
-  width: clamp(330px, 60vw, 800px); 
-  height: clamp(220px, 40vw, 550px);
-  position: relative;
-  overflow: visible;
-  touch-action: pan-y;
-}
-
-/* --- 3D CARD STYLES --- */
-.card {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
-  overflow: hidden;
-  transform-origin: center;
-  transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.6s ease, filter 0.6s ease;
-  background: var(--color-card-bg);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(5px);
-  z-index: 1;
-}
-.card img, .card video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-/* SCALING CHANGE: Increased separation and rotation for wider views */
-.card.prev {
-    transform: translateX(-100%) translateZ(-500px) rotateY(35deg) scale(0.9);
-    opacity: 0.6;
-    filter: blur(5px);
-    z-index: 0;
-}
-/* SCALING CHANGE: Increased separation and rotation for wider views */
-.card.next {
-    transform: translateX(100%) translateZ(-500px) rotateY(-35deg) scale(0.9);
-    opacity: 0.6;
-    filter: blur(5px);
-    z-index: 0;
-}
-.card.active {
-    transform: translateX(0) translateZ(0) rotateY(0) scale(1);
-    opacity: 1; 
-    filter: blur(0);
-    z-index: 2; 
-    cursor: grab;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-}
-.card.hidden {
-    opacity: 0; 
-    pointer-events: none; 
-    transition: none;
-    transform: scale(0.5) translateZ(-800px); 
-}
-/* --- Greyed out effect for out-of-stock products --- */
-.card.out-of-stock {
-    filter: grayscale(100%) brightness(80%);
-    transition: filter 0.6s ease;
-}
-
-
-/* --- PRODUCT DETAIL CARD --- */
-.product-details {
-  background: var(--color-card-bg);
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
-  margin-top: 30px;
-  padding: 15px 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  min-height: 80px;
-  width: 100%;
-  box-sizing: border-box;
-  /* SCALING CHANGE: Max width matches the gallery container width */
-  max-width: clamp(330px, 60vw, 800px); 
-  margin-left: auto;
-  margin-right: auto;
-}
-.product-info {
-    flex-grow: 1;
-}
-.product-name {
-  /* SCALING CHANGE: Font size scales */
-  font-size: clamp(1.1rem, 2vw, 1.6rem);
-  font-weight: 600;
-  color: var(--color-primary);
-}
-.product-price {
-  /* SCALING CHANGE: Font size scales */
-  font-size: clamp(1.4rem, 2.5vw, 2.2rem);
-  font-weight: 700;
-  color: var(--color-secondary);
-  margin-top: 2px;
-}
-/* --- Stock Status Styling --- */
-.stock-status {
-    /* SCALING CHANGE: Font size scales */
-    font-size: clamp(0.8rem, 1.5vw, 1rem);
-    font-weight: 600;
-    margin-top: 2px;
-}
-.stock-available {
-    color: red;
-}
-.stock-unavailable {
-    color: grey;
-}
-/* -------------------------------- */
-.add-to-cart-btn {
-  background-color: var(--color-secondary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 25px;
-  /* SCALING CHANGE: Font size scales */
-  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.1s;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-  margin-left: 20px;
-}
-.add-to-cart-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-.add-to-cart-btn:hover:enabled {
-    background-color: #8c602b;
-}
-.pulse-confirm {
-  animation: pulse .3s;
-}
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-/* --- VIEWER (Zoom) --- */
-.viewer {
-  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(10, 10, 10, 0.9); z-index: 9999; opacity: 0; visibility: hidden;
-  transition: opacity 0.35s ease, visibility 0.35s ease; pointer-events: none;
-}
-.viewer.show { opacity: 1; visibility: visible; pointer-events: auto; }
-.viewer-content {
-  position: relative; max-width: 95%; max-height: 90%; z-index: 10000;
-  transform: scale(.9); transition: transform .35s ease;
-}
-.viewer.show .viewer-content { transform: scale(1); }
-.viewer img, .viewer video {
-  width: auto; height: auto; max-width: 95vw; max-height: 85vh;
-  border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-  background: #000; object-fit: contain; display: block;
-}
-.close-btn {
-  position: absolute; top: 10px; right: 10px; z-index: 10010;
-  background: rgba(255,255,255,0.8); border: none; border-radius: 50%;
-  width: 36px; height: 36px; font-size: 22px; font-weight: bold; color: var(--color-primary);
-  cursor: pointer; 
-}
-</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+        /* Sidebar Transitions */
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        
+        /* Toggle Switch Custom CSS */
+        .toggle-checkbox:checked { right: 0; border-color: #10B981; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10B981; }
+        
+        /* Custom Scrollbar for Table */
+        .custom-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
 </head>
-<body>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
 
-<div class="gallery-wrapper" id="galleryWrapper">
-  <div class="gallery-title">Jualan Harian</div>
-  <div class="gallery-description">*LIMITED stok! untuk checkout pilih saje pickup atau COD(lala/grab), tq, Jemput santai cuci mata 😉</div>
-
-  <div class="gallery-section">
-    <div class="gallery-container" id="gallery">
-      </div>
-  </div>
-
-  <div class="product-details">
-    <div class="product-info">
-      <div class="product-name" id="product-name">Product Name</div>
-      <div class="product-price" id="product-price">RM 0.00</div>
-      <div class="stock-status" id="stock-status"></div>
+    <div id="auth-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[60]">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center border-t-4 border-amber-600">
+            <h1 class="text-2xl font-bold text-amber-700 mb-2">Pipah Admin 5.0</h1>
+            <p class="text-slate-400 text-sm mb-6">Masukkan kod keselamatan</p>
+            <input type="password" id="pin-code" class="w-full border p-3 rounded-xl mb-4 text-center tracking-[1em] font-bold text-xl" placeholder="••••">
+            <button onclick="login()" class="w-full bg-amber-600 text-white font-bold p-3 rounded-xl hover:bg-amber-700 transition">Masuk Sistem</button>
+        </div>
     </div>
-    <button class="add-to-cart-btn" id="add-to-cart-btn">Add to Cart</button>
-  </div>
-</div>
 
-<div id="mediaViewer" class="viewer" aria-hidden="true">
-  <div class="viewer-content">
-    <img id="viewerImage" src="" alt="" />
-    <video id="viewerVideo" controls playsinline webkit-playsinline></video>
-    <button id="viewerClose" class="close-btn" aria-label="Close viewer">&times;</button>
-  </div>
-</div>
+    <div id="dashboard" class="hidden flex h-full relative">
+        
+        <aside id="sidebar" class="absolute inset-y-0 left-0 w-64 bg-white shadow-2xl transform -translate-x-full z-40 border-r border-slate-200 flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-amber-50">
+                <span class="font-bold text-xl text-amber-700">🍪 Menu</span>
+                <button onclick="toggleSidebar()" class="text-slate-500 hover:text-red-500 text-xl font-bold">&times;</button>
+            </div>
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <button onclick="nav('products')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-amber-50 font-medium text-slate-700 focus:bg-amber-100 transition">📦 Senarai Produk</button>
+                <button onclick="nav('trending')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-amber-50 font-medium text-slate-700 focus:bg-amber-100 transition">🔥 Trending Item</button>
+                <button onclick="nav('hero')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-amber-50 font-medium text-slate-700 focus:bg-amber-100 transition">🖼️ Hero Banner</button>
+                <button onclick="nav('gallery')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-amber-50 font-medium text-slate-700 focus:bg-amber-100 transition">📸 Galeri 3D</button>
+                <button onclick="nav('settings')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-amber-50 font-medium text-slate-700 focus:bg-amber-100 transition">⚙️ Tetapan</button>
+            </nav>
+            <div class="p-4 border-t">
+                <button onclick="location.reload()" class="w-full text-left px-4 py-3 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg font-bold transition">Log Keluar</button>
+            </div>
+        </aside>
 
-<script src="products.js"></script> 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // --- DOM ELEMENTS ---
-  const gallery = document.getElementById('gallery');
-  let cards; // Will be populated by initializeGallery
-  const productNameEl = document.getElementById('product-name');
-  const productPriceEl = document.getElementById('product-price');
-  const stockStatusEl = document.getElementById('stock-status'); 
-  const addToCartBtn = document.getElementById('add-to-cart-btn');
-  const viewer = document.getElementById('mediaViewer');
-  const viewerContent = viewer.querySelector('.viewer-content');
-  const viewerImg = document.getElementById('viewerImage');
-  const viewerVid = document.getElementById('viewerVideo');
-  const viewerClose = document.getElementById('viewerClose');
-  const galleryWrapper = document.getElementById('galleryWrapper');
+        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/20 z-30 hidden backdrop-blur-sm"></div>
 
-  // --- VARIABLES & CONSTANTS ---
-  let activeIndex = 0;
+        <main class="flex-1 flex flex-col h-full bg-slate-50 w-full">
+            
+            <header class="bg-white border-b h-16 flex items-center px-6 justify-between flex-shrink-0 sticky top-0 z-20">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <h2 class="text-xl font-bold text-slate-800" id="page-title">Dashboard</h2>
+                </div>
+            </header>
 
-  // FUNCTION: Create a Card Element from product data
-  function createCard(product, index) {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.setAttribute('data-index', index);
-      
-      let mediaElement;
-      // Use the isVideo and mediaUrl properties from products.js
-      if (product.isVideo) {
-          mediaElement = document.createElement('video');
-          mediaElement.src = product.mediaUrl;
-          mediaElement.alt = index + 1;
-          mediaElement.controls = false; 
-          mediaElement.loop = true;
-          mediaElement.muted = true;
-          mediaElement.playsInline = true;
-          mediaElement.webkitPlaysInline = true;
-      } else {
-          mediaElement = document.createElement('img');
-          mediaElement.src = product.mediaUrl;
-          mediaElement.alt = index + 1;
-      }
-      
-      card.appendChild(mediaElement);
-      return card;
-  }
-  
-  // FUNCTION: Initialize Gallery Cards from products.js
-  function initializeGallery() {
-      // 'products' is the global variable loaded from products.js
-      // NOTE: 'products' array must be defined in the external products.js file
-      if (typeof products === 'undefined' || products.length === 0) {
-        console.error("products.js is missing or empty. Cannot initialize gallery.");
-        return;
-      }
-      
-      products.forEach((product, index) => {
-          const card = createCard(product, index);
-          gallery.appendChild(card);
-      });
-      // CRUCIAL: Select the newly generated cards into the 'cards' array
-      cards = Array.from(gallery.querySelectorAll('.card')); 
-  }
-  
-  // --- CART HOOK ---
-  addToCartBtn.addEventListener('click', () => {
-    const product = products[activeIndex];
-    
-    if (product.stock <= 0) {
-        alert('Maaf, produk ini telah habis stok.');
-        return; 
-    }
-    
-    // Sends the base price from products.js (0% discount)
-    window.parent.postMessage({ 
-        eventType: 'gallery:addToCart',
-        detail: { 
-            productId: product.id, 
-            productName: 'Gallery: ' + product.name, 
-            productPrice: product.price, 
-            quantity: 1
-        } 
-    }, '*');
-    
-    addToCartBtn.classList.add('pulse-confirm');
-    setTimeout(() => addToCartBtn.classList.remove('pulse-confirm'), 300);
-  });
-  
- // --- GALLERY SLIDER FUNCTIONS ---
-  function setActive(index) {
-    if (!cards || cards.length === 0) return;
-    
-    activeIndex = (index + cards.length) % cards.length; 
-    
-    cards.forEach((c, i) => {
-      let state = 'hidden';
-      if (i === activeIndex) state = 'active';
-      else if (i === (activeIndex + 1) % cards.length) state = 'next';
-      else if (i === (activeIndex - 1 + cards.length) % cards.length) state = 'prev';
-      
-      const productStock = products[i] ? products[i].stock : 1;
-      const stockClass = (productStock <= 0) ? ' out-of-stock' : '';
-      
-      c.className = `card ${state}${stockClass}`;
-      
-      const video = c.querySelector('video');
-      if (video) {
-        if (i === activeIndex) {
-            video.play().catch(()=>{});
-        } else {
-            video.pause();
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 custom-scroll">
+
+                <div id="view-products">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <div>
+                            <h2 class="font-bold text-lg">Inventori Produk</h2>
+                            <p class="text-slate-500 text-sm">Urus harga borong dan status stok.</p>
+                        </div>
+                        <button onclick="openModal('products')" class="bg-amber-600 text-white px-5 py-2.5 rounded-xl font-bold shadow hover:bg-amber-700 text-sm flex items-center gap-2 transition">
+                            <span>+ Tambah Produk</span>
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
+                                <thead class="bg-slate-100 text-slate-600 font-bold border-b text-xs uppercase tracking-wider">
+                                    <tr>
+                                        <th class="p-4 w-16">Img</th>
+                                        <th class="p-4">Nama Produk</th>
+                                        <th class="p-4">Kategori</th>
+                                        <th class="p-4 w-64">Tier Harga & Qty</th>
+                                        <th class="p-4 text-center">Status</th>
+                                        <th class="p-4 text-right">Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="product-tbody" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-trending" class="hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="font-bold text-lg">Trending Items 🔥</h2>
+                            <p class="text-slate-500 text-sm">Item slider 3D utama.</p>
+                        </div>
+                        <button onclick="openModal('trending_products')" class="bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold shadow hover:bg-orange-700 text-sm">
+                            + Tambah Trending
+                        </button>
+                    </div>
+                    <div id="trending-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6"></div>
+                </div>
+
+                <div id="view-hero" class="hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="font-bold text-lg">Banner Utama</h2>
+                        <button onclick="addHero()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow hover:bg-indigo-700 text-sm">+ Banner Baru</button>
+                    </div>
+                    <div id="hero-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                </div>
+
+                <div id="view-gallery" class="hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="font-bold text-lg">Galeri 3D</h2>
+                        <button onclick="addGallery()" class="bg-pink-600 text-white px-5 py-2.5 rounded-xl font-bold shadow hover:bg-pink-700 text-sm">+ Gambar</button>
+                    </div>
+                    <div id="gallery-grid" class="grid grid-cols-3 md:grid-cols-6 gap-4"></div>
+                </div>
+
+                <div id="view-settings" class="hidden">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border max-w-lg mx-auto space-y-6">
+                        <h3 class="font-bold text-xl border-b pb-4">Tetapan Sistem</h3>
+                        <div>
+                            <label class="block font-bold mb-2 text-sm text-slate-600">No. WhatsApp Admin (tanpa +)</label>
+                            <input id="setting-wa" class="w-full border p-3 rounded-lg bg-slate-50 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="60123456789">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-2 text-sm text-slate-600">Link Pendaftaran Reseller</label>
+                            <input id="setting-reseller" class="w-full border p-3 rounded-lg bg-slate-50 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="https://...">
+                        </div>
+                        <button onclick="saveSettings()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold shadow hover:bg-green-700 transition">Simpan Perubahan</button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="modal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scroll">
+            
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 class="text-xl font-bold text-slate-800" id="modal-title">Edit Item</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 text-2xl transition">&times;</button>
+            </div>
+            
+            <input type="hidden" id="inp-id">
+            <input type="hidden" id="inp-collection">
+
+            <div class="space-y-5">
+                
+                <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-sm text-slate-700">Status Stok</span>
+                        <span class="text-[10px] text-slate-400">Paparan 'Sold Out' jika dimatikan</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="lbl-status" class="text-xs font-bold text-slate-500">Unavailable</span>
+                        <div class="relative inline-block w-12 align-middle select-none">
+                            <input type="checkbox" name="toggle" id="inp-available" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-slate-300 transition-all duration-300"/>
+                            <label for="inp-available" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Maklumat Produk</label>
+                    <input id="inp-name" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none font-semibold text-slate-700" placeholder="Nama Produk (Contoh: Choco Jar)">
+                </div>
+
+                <div id="div-category">
+                    <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Kategori</label>
+                    <select id="inp-cat" class="w-full border p-3 rounded-lg bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+                        <option value="Cookies">Cookies</option>
+                        <option value="Desserts">Desserts</option>
+                        <option value="Pre-Order">Pre-Order</option>
+                        <option value="Limited">Limited Edition</option>
+                    </select>
+                </div>
+
+                <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p class="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                        <span>🏷️ Tetapan Harga & Borong</span>
+                    </p>
+                    
+                    <div class="flex gap-3 items-end">
+                        <div class="w-1/3">
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Normal (RM)</label>
+                            <input type="number" id="inp-price1" class="w-full border p-2 rounded text-sm font-bold text-slate-700" placeholder="0.00">
+                        </div>
+                        <div class="w-1/3">
+                            <label class="block text-[10px] font-bold text-slate-400 mb-1">Min Qty</label>
+                            <input type="number" value="1" disabled class="w-full border p-2 rounded text-sm bg-slate-200 text-slate-500 text-center font-bold">
+                        </div>
+                        <div class="w-1/3 text-[10px] text-slate-400 pb-2 leading-tight">Harga jualan seunit biasa.</div>
+                    </div>
+
+                    <div class="flex gap-3 items-end">
+                        <div class="w-1/3">
+                            <label class="block text-[10px] font-bold text-blue-600 mb-1">Ejen (RM)</label>
+                            <input type="number" id="inp-price2" class="w-full border border-blue-200 p-2 rounded text-sm font-bold text-blue-700 bg-blue-50/50" placeholder="0.00">
+                        </div>
+                        <div class="w-1/3">
+                            <label class="block text-[10px] font-bold text-blue-600 mb-1">Min Qty</label>
+                            <input type="number" id="inp-qty2" class="w-full border border-blue-200 p-2 rounded text-sm text-center font-bold text-blue-700 bg-blue-50/50" placeholder="Cth: 10">
+                        </div>
+                        <div class="w-1/3 text-[10px] text-blue-400 pb-2 leading-tight">Harga borong level 1.</div>
+                    </div>
+
+                    <div class="flex gap-3 items-end">
+                        <div class="w-1/3">
+                            <label class="block text-[10px] font-bold text-purple-600 mb-1">Stokis (RM)</label>
+                            <input type="number" id="inp-price3" class="w-full border border-purple-200 p-2 rounded text-sm font-bold text-purple-700 bg-purple-50/50" placeholder="0.00">
+                        </div>
+                        <div class="w-1/3">
+                            <label class="block text-[10px] font-bold text-purple-600 mb-1">Min Qty</label>
+                            <input type="number" id="inp-qty3" class="w-full border border-purple-200 p-2 rounded text-sm text-center font-bold text-purple-700 bg-purple-50/50" placeholder="Cth: 50">
+                        </div>
+                        <div class="w-1/3 text-[10px] text-purple-400 pb-2 leading-tight">Harga borong level 2.</div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Gambar Produk</label>
+                    <div class="border-2 border-dashed border-slate-300 p-4 rounded-xl flex items-center gap-4 bg-slate-50 hover:bg-slate-100 transition cursor-pointer" onclick="uploadImage('inp-img-url','inp-preview')">
+                        <img id="inp-preview" src="https://placehold.co/100" class="w-20 h-20 rounded-lg object-cover bg-white shadow-sm border">
+                        <div class="flex-1">
+                            <input type="hidden" id="inp-img-url">
+                            <div class="text-sm font-bold text-slate-700">Muat Naik Gambar</div>
+                            <p class="text-xs text-slate-400 mt-1">Klik sini untuk pilih gambar (Disarankan 1:1)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3 border-t pt-4">
+                <button onclick="closeModal()" class="px-5 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-lg transition">Batal</button>
+                <button onclick="saveItem()" class="px-8 py-3 bg-amber-600 text-white font-bold rounded-lg shadow hover:bg-amber-700 transition">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION (Using user's keys)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2Y2cOh3J7U916Ip0tnDDFVs2fK6sACl0",
+            authDomain: "pipahcookies-21e38.firebaseapp.com",
+            projectId: "pipahcookies-21e38",
+            storageBucket: "pipahcookies-21e38.firebasestorage.app",
+            messagingSenderId: "162482379926",
+            appId: "1:162482379926:web:14d16f5a2444816876f6b7"
+        };
+        const cloudName = "dggh4uztz"; 
+        const uploadPreset = "PipahCookies"; 
+
+        // INIT
+        try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);}catch(e){}
+        const db = firebase.firestore();
+
+        // CACHE
+        let cacheData = { products: {}, trending: {} };
+
+        // --- AUTH & UI ---
+        function login(){
+            if(document.getElementById('pin-code').value === "1234"){
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                loadAllData();
+                nav('products');
+            } else {
+                alert("Kod Salah!");
+                document.getElementById('pin-code').value = '';
+            }
         }
-      }
-    });
-    
-    const currentProduct = products[activeIndex];
-    
-    productNameEl.textContent = currentProduct.name;
-    // Price display uses the original price (0% discount)
-    productPriceEl.textContent = `RM ${currentProduct.price.toFixed(2)}`; 
-    
-    // --- Stock Check Logic ---
-    const stock = currentProduct.stock;
-    
-    if (stock > 0) {
-        addToCartBtn.disabled = false;
-        addToCartBtn.textContent = 'Add to Cart';
-        stockStatusEl.className = 'stock-status stock-available';
-        stockStatusEl.textContent = `${stock} available`;
-    } else {
-        addToCartBtn.disabled = true;
-        addToCartBtn.textContent = 'Sold Out';
-        stockStatusEl.className = 'stock-status stock-unavailable';
-        stockStatusEl.textContent = 'Out of Stock';
-    }
-    
-    if(viewer.classList.contains('show')) showViewer(activeIndex);
-  }
 
-  // --- Drag/Swipe Control ---
-  function dragControl(container, onSwipe){
-    let dragging = false, startX = 0, diff = 0;
-    
-    const startDrag = (clientX) => { dragging = true; startX = clientX; container.style.cursor = 'grabbing'; };
-    const moveDrag = (clientX) => { if(dragging) diff = clientX - startX; };
-    const endDrag = () => { 
-        if(dragging){ 
-            if(Math.abs(diff) > 30) onSwipe(diff < 0 ? 1 : -1);
-            dragging = false; diff = 0; 
+        function toggleSidebar(){
+            const sb = document.getElementById('sidebar');
+            const ov = document.getElementById('sidebar-overlay');
+            if(sb.classList.contains('-translate-x-full')){
+                sb.classList.remove('-translate-x-full');
+                ov.classList.remove('hidden');
+            } else {
+                sb.classList.add('-translate-x-full');
+                ov.classList.add('hidden');
+            }
         }
-        container.style.cursor = 'grab';
-    };
 
-    container.addEventListener('touchstart', e => startDrag(e.touches[0].clientX), {passive: true});
-    container.addEventListener('touchmove', e => moveDrag(e.touches[0].clientX), {passive: true});
-    container.addEventListener('touchend', endDrag);
+        function nav(view){
+            ['products','hero','trending','gallery','settings'].forEach(id => {
+                document.getElementById('view-'+id).classList.add('hidden');
+            });
+            document.getElementById('view-'+view).classList.remove('hidden');
+            
+            // Auto hide sidebar logic
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebar-overlay').classList.add('hidden');
 
-    container.addEventListener('mousedown', e => { startDrag(e.clientX); e.preventDefault(); });
-    container.addEventListener('mousemove', e => moveDrag(e.clientX));
-    container.addEventListener('mouseup', endDrag);
-    container.addEventListener('mouseleave', () => { dragging = false; diff = 0; container.style.cursor = 'grab'; });
-  }
+            const titles = {
+                'products': '📦 Pengurusan Produk',
+                'trending': '🔥 Trending Item',
+                'hero': '🖼️ Hero Banner',
+                'gallery': '📸 Galeri 3D',
+                'settings': '⚙️ Tetapan Sistem'
+            };
+            document.getElementById('page-title').innerText = titles[view];
+        }
 
-  dragControl(gallery, d => setActive(activeIndex + d));
-  dragControl(viewerContent, d => setActive(activeIndex + d));
+        // --- DATA LOADING & RENDERING ---
+        function loadAllData(){
+            
+            // 1. PRODUCTS TABLE
+            db.collection('products').onSnapshot(s => {
+                const t = document.getElementById('product-tbody'); 
+                t.innerHTML = '';
+                cacheData.products = {}; 
 
-  // --- VIEWER (Zoom) FUNCTIONS ---
-  function showViewer(index){
-    const media = cards[index].querySelector('img, video');
-    if(!media) return;
+                if(s.empty) t.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 italic">Tiada produk dijumpai. Tekan butang Tambah.</td></tr>';
 
-    viewerImg.style.display = 'none';
-    viewerVid.style.display = 'none';
-    viewerVid.pause();
-    
-    if(media.tagName === 'IMG') {
-      viewerImg.src = media.src;
-      viewerImg.alt = media.alt;
-      viewerImg.style.display = 'block';
-    }
-    if(media.tagName === 'VIDEO'){
-      const videoSrc = media.src; 
-      viewerVid.src = videoSrc;
-      viewerVid.style.display = 'block';
-      viewerVid.load();
-      viewerVid.play().catch(e => console.log('Video play failed:', e));
-    }
-  }
+                s.forEach(d => {
+                    const p = d.data();
+                    cacheData.products[d.id] = p;
 
-  function openViewer(index){
-    viewer.classList.add('show');
-    setActive(index);
-  }
+                    const statusBadge = (p.available !== false) 
+                        ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200">Available</span>`
+                        : `<span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-200">Sold Out</span>`;
 
-  function closeViewer(){
-    viewer.classList.remove('show');
-    viewerVid.pause();
-    viewerVid.removeAttribute('src'); 
-    viewerVid.load();
-  }
+                    // Tier Price Display Logic
+                    let priceDisplay = `<div class="space-y-1.5 text-xs">`;
+                    
+                    // Normal
+                    priceDisplay += `<div class="font-bold text-slate-700 flex items-center justify-between"><span class="w-12">Normal</span> <span>RM${(p.priceTier1 || p.price || 0).toFixed(2)}</span></div>`;
+                    
+                    // Ejen
+                    if(p.priceTier2) {
+                        priceDisplay += `<div class="text-blue-600 flex items-center justify-between">
+                            <span class="w-12">Ejen</span> 
+                            <span class="font-bold">RM${parseFloat(p.priceTier2).toFixed(2)}</span>
+                            <span class="bg-blue-50 px-1.5 py-0.5 rounded text-[10px] border border-blue-100 text-blue-500 font-semibold ml-2">Min: ${p.minQty2 || '-'}</span>
+                        </div>`;
+                    }
 
-  gallery.addEventListener('click', (e) => {
-    const activeCard = e.target.closest('.card.active');
-    if (activeCard) openViewer(activeIndex);
-  });
-  
-  viewerClose.addEventListener('click', closeViewer);
-  viewer.addEventListener('click', e => { 
-    if(e.target === viewer || e.target === viewerClose) closeViewer(); 
-  });
-  
-  // --- Auto-resize Iframe (for parent page scroll) ---
-  function resizeIframe() {
-    const height = galleryWrapper.offsetHeight; 
-    // This postMessage assumes the gallery is embedded in an iframe on a parent page.
-    window.parent.postMessage({ galleryHeight: height }, '*');
-  }
+                    // Stokis
+                    if(p.priceTier3) {
+                        priceDisplay += `<div class="text-purple-600 flex items-center justify-between">
+                            <span class="w-12">Stokis</span> 
+                            <span class="font-bold">RM${parseFloat(p.priceTier3).toFixed(2)}</span>
+                            <span class="bg-purple-50 px-1.5 py-0.5 rounded text-[10px] border border-purple-100 text-purple-500 font-semibold ml-2">Min: ${p.minQty3 || '-'}</span>
+                        </div>`;
+                    }
+                    priceDisplay += `</div>`;
 
-  // --- Initialization ---
-  initializeGallery();
-  if (cards && cards.length > 0) {
-    setActive(0);
-  } else {
-    // Fallback if no products are loaded
-    productNameEl.textContent = 'No Products Loaded';
-    productPriceEl.textContent = 'RM 0.00';
-    stockStatusEl.textContent = 'Please check products.js';
-    addToCartBtn.disabled = true;
-    addToCartBtn.textContent = 'Unavailable';
-  }
-  
-  resizeIframe();
-  window.addEventListener('resize', resizeIframe);
-  
-});
-</script>
+                    t.innerHTML += `
+                        <tr class="border-b hover:bg-slate-50 transition group">
+                            <td class="p-4 align-top"><img src="${p.image}" class="w-12 h-12 rounded-lg bg-gray-200 object-cover shadow-sm border group-hover:scale-105 transition"></td>
+                            <td class="p-4 font-bold text-slate-700 align-top text-sm">${p.name}</td>
+                            <td class="p-4 align-top"><span class="text-[10px] font-bold text-slate-500 bg-slate-100 rounded px-2 py-1 uppercase tracking-wide border">${p.category}</span></td>
+                            <td class="p-4 align-top w-64 bg-slate-50/50 rounded-xl m-2">${priceDisplay}</td>
+                            <td class="p-4 text-center align-top pt-6">${statusBadge}</td>
+                            <td class="p-4 text-right align-top">
+                                <div class="flex flex-col gap-2 items-end">
+                                    <button onclick="prepareEdit('products', '${d.id}')" class="bg-white border border-slate-200 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 hover:border-blue-200 font-bold text-xs w-20 shadow-sm transition">Edit</button>
+                                    <button onclick="del('products','${d.id}')" class="bg-white border border-slate-200 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 hover:border-red-200 font-bold text-xs w-20 shadow-sm transition">Padam</button>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+            });
+
+            // 2. TRENDING GRID
+            db.collection('trending_products').onSnapshot(s => {
+                const g = document.getElementById('trending-grid'); 
+                g.innerHTML = '';
+                cacheData.trending = {};
+
+                s.forEach(d => {
+                    const p = d.data();
+                    cacheData.trending[d.id] = p;
+
+                    const opacity = (p.available === false) ? 'opacity-50 grayscale' : '';
+                    const statusText = (p.available === false) ? '<span class="absolute top-2 left-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold shadow-sm z-10">SOLD OUT</span>' : '';
+                    const price = p.priceTier1 || p.price || 0;
+
+                    g.innerHTML += `
+                        <div class="relative group rounded-xl overflow-hidden border bg-white shadow-sm hover:shadow-md transition duration-300">
+                            ${statusText}
+                            <div class="aspect-square overflow-hidden bg-gray-100">
+                                <img src="${p.image}" class="w-full h-full object-cover ${opacity} group-hover:scale-110 transition duration-500">
+                            </div>
+                            <div class="p-4">
+                                <div class="font-bold text-sm text-slate-800 truncate mb-1">${p.name}</div>
+                                <div class="text-xs font-bold text-amber-600">RM ${parseFloat(price).toFixed(2)}</div>
+                            </div>
+                            <div class="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="prepareEdit('trending_products', '${d.id}')" class="bg-white text-blue-600 p-2 rounded-lg shadow-lg hover:bg-blue-600 hover:text-white transition">✏️</button>
+                                <button onclick="del('trending_products','${d.id}')" class="bg-white text-red-600 p-2 rounded-lg shadow-lg hover:bg-red-600 hover:text-white transition">🗑️</button>
+                            </div>
+                        </div>`;
+                });
+            });
+
+            // 3. HERO
+            db.collection('hero_banners').onSnapshot(s => {
+                const g = document.getElementById('hero-grid'); g.innerHTML = '';
+                s.forEach(d => g.innerHTML += `
+                    <div class="relative group rounded-xl overflow-hidden border shadow-sm h-48">
+                        <img src="${d.data().image}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                            <span class="text-white font-bold text-sm">${d.data().title||''}</span>
+                        </div>
+                        <button onclick="del('hero_banners','${d.id}')" class="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full shadow hover:bg-red-700 flex items-center justify-center transition">✕</button>
+                    </div>`);
+            });
+
+            // 4. GALLERY
+            db.collection('gallery_images').onSnapshot(s => {
+                const g = document.getElementById('gallery-grid'); g.innerHTML = '';
+                s.forEach(d => g.innerHTML += `
+                    <div class="relative group rounded-xl overflow-hidden border aspect-square shadow-sm">
+                        <img src="${d.data().image}" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
+                        <button onclick="del('gallery_images','${d.id}')" class="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 text-xs rounded shadow flex items-center justify-center hover:bg-red-700">✕</button>
+                    </div>`);
+            });
+
+            // 5. SETTINGS LOAD
+            db.collection('settings').doc('config').get().then(d => {
+                if(d.exists){
+                    document.getElementById('setting-wa').value = d.data().whatsapp || '';
+                    document.getElementById('setting-reseller').value = d.data().resellerLink || '';
+                }
+            });
+        }
+
+        // --- INTERACTION LOGIC ---
+
+        // Toggle Switch Listener (Visual Only)
+        document.getElementById('inp-available').addEventListener('change', function() {
+            const lbl = document.getElementById('lbl-status');
+            if(this.checked) {
+                lbl.innerText = "Available"; lbl.className = "text-xs font-bold text-green-600";
+            } else {
+                lbl.innerText = "Sold Out"; lbl.className = "text-xs font-bold text-red-500";
+            }
+        });
+
+        function openModal(collectionName) {
+            document.getElementById('modal-title').innerText = (collectionName === 'products') ? "Tambah Produk" : "Tambah Trending";
+            document.getElementById('inp-collection').value = collectionName;
+            
+            // Reset Fields
+            document.getElementById('inp-id').value = "";
+            document.getElementById('inp-name').value = "";
+            document.getElementById('inp-price1').value = "";
+            document.getElementById('inp-price2').value = "";
+            document.getElementById('inp-price3').value = "";
+            document.getElementById('inp-qty2').value = "";
+            document.getElementById('inp-qty3').value = "";
+            document.getElementById('inp-img-url').value = "";
+            document.getElementById('inp-preview').src = "https://placehold.co/100?text=IMG";
+
+            // Default Status: True
+            document.getElementById('inp-available').checked = true;
+            document.getElementById('inp-available').dispatchEvent(new Event('change'));
+
+            // Toggle Category Visibility
+            const catDiv = document.getElementById('div-category');
+            if(collectionName === 'trending_products') catDiv.classList.add('hidden');
+            else catDiv.classList.remove('hidden');
+
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function prepareEdit(collection, id) {
+            const data = (collection === 'products') ? cacheData.products[id] : cacheData.trending[id];
+            if(!data) return;
+
+            document.getElementById('modal-title').innerText = "Edit " + data.name;
+            document.getElementById('inp-collection').value = collection;
+            document.getElementById('inp-id').value = id;
+            document.getElementById('inp-name').value = data.name;
+
+            // Load Prices & Qtys
+            document.getElementById('inp-price1').value = data.priceTier1 || data.price || "";
+            document.getElementById('inp-price2').value = data.priceTier2 || "";
+            document.getElementById('inp-qty2').value = data.minQty2 || "";
+            document.getElementById('inp-price3').value = data.priceTier3 || "";
+            document.getElementById('inp-qty3').value = data.minQty3 || "";
+
+            // Load Image
+            document.getElementById('inp-img-url').value = data.image;
+            document.getElementById('inp-preview').src = data.image;
+
+            // Load Category
+            if(collection === 'products') {
+                document.getElementById('div-category').classList.remove('hidden');
+                document.getElementById('inp-cat').value = data.category || 'Cookies';
+            } else {
+                document.getElementById('div-category').classList.add('hidden');
+            }
+
+            // Load Status
+            const isAvail = (data.available !== false);
+            document.getElementById('inp-available').checked = isAvail;
+            document.getElementById('inp-available').dispatchEvent(new Event('change'));
+
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function saveItem() {
+            const collection = document.getElementById('inp-collection').value;
+            const id = document.getElementById('inp-id').value;
+            const name = document.getElementById('inp-name').value;
+            const img = document.getElementById('inp-img-url').value;
+            const isAvailable = document.getElementById('inp-available').checked;
+
+            if(!name || !img) return alert("Sila lengkapkan nama dan gambar.");
+
+            // Parse numbers
+            const p1 = parseFloat(document.getElementById('inp-price1').value) || 0;
+            const p2 = parseFloat(document.getElementById('inp-price2').value) || 0;
+            const p3 = parseFloat(document.getElementById('inp-price3').value) || 0;
+            const q2 = parseInt(document.getElementById('inp-qty2').value) || 0;
+            const q3 = parseInt(document.getElementById('inp-qty3').value) || 0;
+
+            let payload = {
+                name: name,
+                image: img,
+                available: isAvailable,
+                price: p1, // Fallback/Main price
+                priceTier1: p1,
+                priceTier2: p2,
+                minQty2: q2,
+                priceTier3: p3,
+                minQty3: q3
+            };
+
+            if(collection === 'products') payload.category = document.getElementById('inp-cat').value;
+            else payload.category = 'Trending';
+
+            const ref = db.collection(collection);
+            const action = id ? ref.doc(id).update(payload) : ref.add(payload);
+
+            action.then(() => closeModal())
+                  .catch(e => alert("Ralat: " + e.message));
+        }
+
+        function closeModal(){ document.getElementById('modal').classList.add('hidden'); }
+
+        // --- UTILS ---
+        function addHero(){ 
+            const t = prompt("Masukkan Tajuk Banner:"); 
+            if(t !== null) uploadImageWidget(u => db.collection('hero_banners').add({title:t, image:u})); 
+        }
+
+        function addGallery(){ uploadImageWidget(u => db.collection('gallery_images').add({image:u})); }
+
+        function del(c, id){ 
+            if(confirm("Padam item ini? Tindakan tidak boleh diundur.")) db.collection(c).doc(id).delete(); 
+        }
+
+        function saveSettings(){ 
+            db.collection('settings').doc('config').set({
+                whatsapp: document.getElementById('setting-wa').value, 
+                resellerLink: document.getElementById('setting-reseller').value
+            }, {merge:true}).then(() => alert("Tetapan berjaya disimpan!")); 
+        }
+
+        function uploadImage(inputId, previewId){ 
+            uploadImageWidget(u => {
+                document.getElementById(inputId).value = u; 
+                document.getElementById(previewId).src = u;
+            }); 
+        }
+
+        function uploadImageWidget(cb){
+            cloudinary.createUploadWidget({
+                cloudName: cloudName, 
+                uploadPreset: uploadPreset, 
+                sources: ['local','camera','url'],
+                folder: 'pipah_v5',
+                clientAllowedFormats: ["png","jpg","jpeg","webp"]
+            }, (err, res) => { 
+                if (!err && res && res.event === "success") cb(res.info.secure_url); 
+            }).open();
+        }
+    </script>
 </body>
 </html>
