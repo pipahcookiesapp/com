@@ -606,11 +606,11 @@
 
             if (x.priceTier3 && x.minQty3 && x.qty >= parseInt(x.minQty3)) {
                 unitPrice = parseFloat(x.priceTier3);
-                activeLabel = " (Stokis)";
+                activeLabel = " (- RM2 OFF)";
             }
             else if (x.priceTier2 && x.minQty2 && x.qty >= parseInt(x.minQty2)) {
                 unitPrice = parseFloat(x.priceTier2);
-                activeLabel = " (Ejen)";
+                activeLabel = " (- RM1 OFF)";
             }
 
             t += unitPrice * x.qty; 
