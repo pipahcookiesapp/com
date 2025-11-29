@@ -3,7 +3,9 @@ const CACHE_NAME = 'pipah-cache-v2';
 const urlsToCache = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './admin.html',
+  './invois.html'
 ];
 
 self.addEventListener('install', event => {
