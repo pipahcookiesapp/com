@@ -441,6 +441,10 @@
     let swiperInstance = null;
     let deferredPrompt; 
 
+    // --- DETECT DEVICE & MODE ---
+    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
+
     window.onload = function() {
         setTimeout(() => { document.getElementById('loader').style.opacity = 0; setTimeout(()=>document.getElementById('loader').style.display='none',500); }, 1500);
 
@@ -472,9 +476,6 @@
 
             // 2. Sort: Available First (True), Unavailable Last (False)
             trendItems.sort((a, b) => {
-                // If a is available and b is not, a comes first (-1)
-                // If a is not available and b is, b comes first (1)
-                // If same, keep order (0)
                 if (a.available === b.available) return 0;
                 return a.available ? -1 : 1;
             });
@@ -482,7 +483,6 @@
             // 3. Render Sorted Items
             wrapper.innerHTML = '';
             trendItems.forEach(d => {
-                // Styling for unavailable items
                 const isSoldOut = (d.available === false);
                 const opacityStyle = isSoldOut ? 'opacity:0.6; filter:grayscale(100%);' : '';
                 const btnState = isSoldOut ? 'disabled style="background:#ccc; cursor:not-allowed;"' : '';
@@ -508,7 +508,7 @@
                 grabCursor: true, 
                 centeredSlides: true, 
                 slidesPerView: "auto", 
-                loop: true, // <--- INFINITY LOOP ENABLED
+                loop: true, 
                 coverflowEffect: { rotate: 30, stretch: 0, depth: 100, modifier: 1, slideShadows: true }, 
                 pagination: { el: ".swiper-pagination" } 
             });
@@ -528,8 +528,59 @@
         });
         updateCartUI();
         
-        checkInstall();
+        // TRIGGER INSTALL LOGIC
+        initInstallPopup();
     };
+
+    // --- SMART INSTALL POPUP LOGIC ---
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Android: Event fired, safe to show popup
+        if(!localStorage.getItem('pipahInstalled')) showPopup(false); 
+    });
+
+    function initInstallPopup() {
+        // iOS Check: No event fires, so we check manually on load
+        if(isIos && !isInStandaloneMode && !localStorage.getItem('pipahInstalled')) {
+            setTimeout(() => showPopup(true), 3000); // Show iOS version
+        }
+    }
+
+    function showPopup(isIOSMode) {
+        const popup = document.getElementById('pipahInstallPopup');
+        const btn = document.getElementById('btnInstall');
+        const txt = document.getElementById('installText');
+
+        if(isIOSMode) {
+            // Customize for iOS (No button, just instructions)
+            btn.style.display = 'none';
+            txt.innerHTML = `1. Tekan butang Share <i class="fas fa-share-square"></i><br>2. Pilih 'Add to Home Screen' <i class="fas fa-plus-square"></i>`;
+            // Save 'installed' when they close it, as we can't detect actual install on iOS easily
+            localStorage.setItem('pipahInstalled', 'true'); 
+        } else {
+            // Android Default
+            btn.style.display = 'block';
+            txt.innerText = "Akses lebih pantas tanpa buka browser!";
+        }
+
+        popup.style.display = 'block';
+        setTimeout(() => popup.classList.add('show'), 100);
+    }
+    
+    function closeInstallPopup() {
+        const popup = document.getElementById('pipahInstallPopup');
+        popup.classList.remove('show'); setTimeout(() => popup.style.display='none', 400);
+    }
+
+    document.getElementById('btnInstall').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') { localStorage.setItem('pipahInstalled', 'true'); }
+            deferredPrompt = null; closeInstallPopup();
+        }
+    });
 
     // --- ZOOM ---
     function openZoom(url) { const m=document.getElementById('zoomModal'); document.getElementById('zoomImg').src=url; m.style.display='flex'; setTimeout(()=>m.classList.add('active'),10); }
@@ -542,34 +593,6 @@
             if(e.target.closest('.slide-add-btn') || e.target.closest('.add-btn')) return;
             const bg = window.getComputedStyle(el).backgroundImage;
             if(bg && bg!=='none') openZoom(bg.slice(4,-1).replace(/"/g,""));
-        }
-    });
-
-    // --- PWA ---
-    function checkInstall() {
-        if(!localStorage.getItem('pipahInstalled')) {
-            setTimeout(() => {
-                const popup = document.getElementById('pipahInstallPopup');
-                if(deferredPrompt) {
-                    popup.style.display = 'block'; setTimeout(()=>popup.classList.add('show'), 50);
-                }
-            }, 3000);
-        }
-    }
-    
-    function closeInstallPopup() {
-        const popup = document.getElementById('pipahInstallPopup');
-        popup.classList.remove('show'); setTimeout(() => popup.style.display='none', 400);
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
-
-    document.getElementById('btnInstall').addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') { localStorage.setItem('pipahInstalled', 'true'); }
-            deferredPrompt = null; closeInstallPopup();
         }
     });
 
