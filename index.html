@@ -44,7 +44,7 @@
     
     #mobile-viewport {
         width: 100%;
-        min-height: 100vh;
+        min-height: 100dvh; /* FIXED: Use dynamic viewport height for mobile browsers */
         position: relative;
         overflow-x: hidden;
         padding-bottom: 120px;
@@ -457,30 +457,32 @@
             startAutoSlide();
         });
 
-        // TRENDING - UPDATED WITH SORT & LOOP
+        // TRENDING - UPDATED WITH SORT & LOOP & DUPLICATE CHECK
         db.collection('trending_products').limit(10).onSnapshot(s => {
             const wrapper = document.getElementById('trending-wrapper');
             let trendItems = [];
 
-            // 1. Collect Data
             s.forEach(doc => {
                 const d = doc.data();
                 const pid = doc.id;
-                // Add to Global Products for cart logic
-                const existingProd = products.find(p => p.id === pid);
-                if (!existingProd) { products.push({ id: pid, ...d }); }
                 
-                // Add to temporary array for sorting
+                // Add to Global Products for cart logic (Check duplicate)
+                const existingIndex = products.findIndex(p => p.id === pid);
+                if (existingIndex > -1) {
+                    products[existingIndex] = { id: pid, ...d }; // Update existing
+                } else {
+                    products.push({ id: pid, ...d }); // Add new
+                }
+                
                 trendItems.push({ id: pid, ...d });
             });
 
-            // 2. Sort: Available First (True), Unavailable Last (False)
+            // Sort: Available First
             trendItems.sort((a, b) => {
                 if (a.available === b.available) return 0;
                 return a.available ? -1 : 1;
             });
 
-            // 3. Render Sorted Items
             wrapper.innerHTML = '';
             trendItems.forEach(d => {
                 const isSoldOut = (d.available === false);
@@ -501,7 +503,6 @@
                     </div>`;
             });
 
-            // 4. Init Swiper with Loop
             if(swiperInstance) swiperInstance.destroy(true, true);
             swiperInstance = new Swiper(".mySwiper", { 
                 effect: "coverflow", 
@@ -514,9 +515,17 @@
             });
         });
 
-        // PRODUCTS
+        // PRODUCTS - FIXED DUPLICATE & SOLD OUT LOGIC
         db.collection('products').onSnapshot(s => {
-            s.forEach(d => { if(!products.find(p=>p.id===d.id)) products.push({id:d.id, ...d.data()}); });
+            s.forEach(d => { 
+                // Check if exists to prevent duplicate (FIX)
+                const existingIndex = products.findIndex(p => p.id === d.id);
+                if(existingIndex > -1) {
+                    products[existingIndex] = {id:d.id, ...d.data()};
+                } else {
+                    products.push({id:d.id, ...d.data()}); 
+                }
+            });
             renderProducts(products.filter(p=> p.category !== 'Trending'));
         });
 
@@ -527,23 +536,19 @@
             VanillaTilt.init(document.querySelectorAll("[data-tilt]"));
         });
         updateCartUI();
-        
-        // TRIGGER INSTALL LOGIC
         initInstallPopup();
     };
 
-    // --- SMART INSTALL POPUP LOGIC ---
+    // --- SMART INSTALL POPUP ---
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        // Android: Event fired, safe to show popup
         if(!localStorage.getItem('pipahInstalled')) showPopup(false); 
     });
 
     function initInstallPopup() {
-        // iOS Check: No event fires, so we check manually on load
         if(isIos && !isInStandaloneMode && !localStorage.getItem('pipahInstalled')) {
-            setTimeout(() => showPopup(true), 3000); // Show iOS version
+            setTimeout(() => showPopup(true), 3000); 
         }
     }
 
@@ -553,13 +558,10 @@
         const txt = document.getElementById('installText');
 
         if(isIOSMode) {
-            // Customize for iOS (No button, just instructions)
             btn.style.display = 'none';
             txt.innerHTML = `1. Tekan butang Share <i class="fas fa-share-square"></i><br>2. Pilih 'Add to Home Screen' <i class="fas fa-plus-square"></i>`;
-            // Save 'installed' when they close it, as we can't detect actual install on iOS easily
             localStorage.setItem('pipahInstalled', 'true'); 
         } else {
-            // Android Default
             btn.style.display = 'block';
             txt.innerText = "Akses lebih pantas tanpa buka browser!";
         }
@@ -598,15 +600,43 @@
 
     // --- FUNCS ---
     function startAutoSlide() { const s=document.getElementById('hero-slider'); setInterval(()=>{ if(s) { s.scrollLeft+=s.offsetWidth; if(s.scrollLeft>=s.scrollWidth-s.offsetWidth) s.scrollLeft=0; } }, 5000); }
-    function renderProducts(l) { const g=document.getElementById('product-list'); g.innerHTML=''; l.forEach(p=>{ g.innerHTML+=`<div class="card"><img src="${p.image}" class="card-img"><div style="font-size:10px; color:#8A817C; font-weight:600;">${p.category}</div><div style="font-weight:700; font-size:14px; margin-bottom:4px;">${p.name}</div><div style="margin-top:auto; display:flex; justify-content:space-between; align-items:center;"><div style="font-weight:700; color:#A67734;">RM ${p.price}</div><button class="add-btn" onclick="addToCart('${p.id}')"><i class="fas fa-plus"></i></button></div></div>`; }); }
+
+    // RENDER PRODUCTS (FIXED SOLD OUT LOGIC)
+    function renderProducts(l) { 
+        const g=document.getElementById('product-list'); 
+        g.innerHTML=''; 
+        l.forEach(p=>{ 
+            // CHECK AVAILABILITY
+            const isSoldOut = (p.available === false);
+            const btnOpacity = isSoldOut ? 'opacity:0.5; pointer-events:none; background:#ccc; border-color:#ccc;' : '';
+            const imgOpacity = isSoldOut ? 'filter:grayscale(100%); opacity:0.7;' : '';
+            const btnIcon = isSoldOut ? '<i class="fas fa-ban"></i>' : '<i class="fas fa-plus"></i>';
+            const action = isSoldOut ? '' : `onclick="addToCart('${p.id}')"`;
+
+            g.innerHTML+=`
+            <div class="card">
+                <img src="${p.image}" class="card-img" style="${imgOpacity}">
+                <div style="font-size:10px; color:#8A817C; font-weight:600;">${p.category}</div>
+                <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${p.name}</div>
+                <div style="margin-top:auto; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight:700; color:#A67734;">RM ${p.price}</div>
+                    <button class="add-btn" style="${btnOpacity}" ${action}>
+                        ${btnIcon}
+                    </button>
+                </div>
+            </div>`; 
+        }); 
+    }
+
     function filterCat(c,b) { document.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); const l=products.filter(p=>p.category!=='Trending'); renderProducts(c==='all'?l:l.filter(p=>p.category===c)); }
     
     function addToCart(id) { 
         const p=products.find(x=>x.id===id), i=cart.find(x=>x.id===id); 
         if(!p)return; 
+        if(p.available === false) return; // double check
+
         i?i.qty++:cart.push({...p,qty:1}); 
         saveCart(); 
-        // No manual pulse trigger needed here, updateCartUI handles state
     }
     
     function saveCart() { localStorage.setItem('pipah_cart', JSON.stringify(cart)); updateCartUI(); }
@@ -617,30 +647,38 @@
     
     function openReseller() { if(settings.resellerLink) window.open(settings.resellerLink, '_blank'); }
 
-    // --- UPDATE CART UI & HANDLE PULSE STATE ---
+    // --- UPDATE CART UI (FIXED PRICING SAFETY) ---
     function updateCartUI() { 
         const l = document.getElementById('cart-content'); 
         l.innerHTML = ''; 
         let t = 0, c = 0; 
         
         cart.forEach((x, i) => { 
-            let unitPrice = parseFloat(x.price); // Default
+            let unitPrice = parseFloat(x.price); 
             let activeLabel = "";
 
-            if (x.priceTier3 && x.minQty3 && x.qty >= parseInt(x.minQty3)) {
+            // SAFETY: ParseInt and Logic Checks
+            const currentQty = parseInt(x.qty);
+            const tier3Qty = parseInt(x.minQty3 || 99999);
+            const tier2Qty = parseInt(x.minQty2 || 99999);
+
+            if (x.priceTier3 && currentQty >= tier3Qty) {
                 unitPrice = parseFloat(x.priceTier3);
                 activeLabel = " (- RM2 OFF)";
             }
-            else if (x.priceTier2 && x.minQty2 && x.qty >= parseInt(x.minQty2)) {
+            else if (x.priceTier2 && currentQty >= tier2Qty) {
                 unitPrice = parseFloat(x.priceTier2);
                 activeLabel = " (- RM1 OFF)";
             }
+            
+            // Fallback for NaN
+            if(isNaN(unitPrice)) unitPrice = parseFloat(x.price || 0);
 
-            t += unitPrice * x.qty; 
-            c += x.qty; 
+            t += unitPrice * currentQty; 
+            c += currentQty; 
             
             let displayPriceHtml = `RM ${unitPrice.toFixed(2)}`;
-            if(unitPrice < x.price) {
+            if(unitPrice < parseFloat(x.price)) {
                 displayPriceHtml = `
                     <span style="text-decoration:line-through; color:#bbb; font-size:11px;">RM ${x.price}</span> 
                     <span style="color:#A67734; font-weight:bold;">RM ${unitPrice.toFixed(2)}</span>
@@ -667,7 +705,6 @@
         document.getElementById('cart-badge').innerText = c; 
         document.getElementById('cart-badge').classList.toggle('show', c > 0); 
         
-        // --- CONTINUOUS PULSE LOGIC ---
         const navItem = document.getElementById('cart-nav-item');
         if(c > 0) {
             navItem.classList.add('pulse-active');
@@ -677,7 +714,7 @@
         }
     }
 
-    // --- CHECKOUT & AUTO CLEAR CART ---
+    // --- CHECKOUT ---
     function goToCheckout() { 
         if(cart.length===0) return alert("Bakul kosong!"); 
         const n=document.getElementById('cust-name').value, o=document.getElementById('cust-note').value; 
@@ -686,14 +723,21 @@
         let finalTotal = 0;
         let finalCartItems = cart.map(x => {
             let unitPrice = parseFloat(x.price);
-            if (x.priceTier3 && x.minQty3 && x.qty >= parseInt(x.minQty3)) unitPrice = parseFloat(x.priceTier3);
-            else if (x.priceTier2 && x.minQty2 && x.qty >= parseInt(x.minQty2)) unitPrice = parseFloat(x.priceTier2);
             
-            finalTotal += unitPrice * x.qty;
+            // Logic must match Cart UI for consistency
+            const currentQty = parseInt(x.qty);
+            const tier3Qty = parseInt(x.minQty3 || 99999);
+            const tier2Qty = parseInt(x.minQty2 || 99999);
+
+            if (x.priceTier3 && currentQty >= tier3Qty) unitPrice = parseFloat(x.priceTier3);
+            else if (x.priceTier2 && currentQty >= tier2Qty) unitPrice = parseFloat(x.priceTier2);
+            
+            if(isNaN(unitPrice)) unitPrice = parseFloat(x.price || 0);
+
+            finalTotal += unitPrice * currentQty;
             return { ...x, finalPrice: unitPrice }; 
         });
 
-        // Save items inside Order Info for the Invoice Page
         localStorage.setItem('pipah_order_info', JSON.stringify({ 
             orderId:'ORD-'+Math.floor(100000+Math.random()*900000), 
             date:new Date().toISOString(), 
@@ -701,13 +745,11 @@
             buyerAddress:o||'-', 
             whatsappAdmin:settings.whatsapp,
             totalAmount: finalTotal,
-            items: finalCartItems // <--- IMPORTANT: Invoice must read this!
+            items: finalCartItems 
         })); 
         
-        // CLEAR CART
         localStorage.removeItem('pipah_cart');
-        cart = []; // Reset memory
-        
+        cart = []; 
         window.location.href='invois.html'; 
     }
 
