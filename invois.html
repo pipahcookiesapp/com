@@ -22,7 +22,6 @@
       display: flex; flex-direction: column; align-items: center;
   }
 
-  /* Invoice Card */
   .invoice-card {
       background: var(--surface);
       width: 100%; max-width: 500px;
@@ -34,7 +33,6 @@
       margin-bottom: 20px;
   }
   
-  /* Decorative Top */
   .card-top {
       height: 12px;
       background: repeating-linear-gradient(45deg, var(--primary), var(--primary) 10px, #FAD961 10px, #FAD961 20px);
@@ -52,18 +50,15 @@
 
   .divider { height: 1px; background: var(--border); margin: 15px 0; }
 
-  /* Item List */
   .item-list { margin-bottom: 20px; }
   .item { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
   .item-name { font-weight: 600; font-size: 14px; color: var(--text-main); flex: 1; padding-right: 10px; }
   .item-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
   .item-price { font-weight: 700; font-size: 14px; }
 
-  /* Totals */
   .total-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: var(--text-muted); }
   .grand-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 15px; padding-top: 15px; border-top: 2px dashed var(--border); }
 
-  /* Action Buttons */
   .actions { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 12px; }
   
   .btn {
@@ -78,7 +73,6 @@
   .btn-download { background: var(--surface); color: var(--text-main); border: 1px solid var(--border); }
   .btn-back { background: transparent; color: var(--text-muted); font-size: 13px; margin-top: 10px; }
 
-  /* PDF Print Hide */
   @media print { .actions, .card-top { display: none; } body { background: white; } .invoice-card { box-shadow: none; } }
 
 </style>
@@ -112,8 +106,7 @@
 
           <div class="divider"></div>
 
-          <div class="item-list" id="invoice-items">
-              </div>
+          <div class="item-list" id="invoice-items"></div>
 
           <div class="divider"></div>
 
@@ -142,15 +135,15 @@
           <i class="fas fa-file-download"></i> Simpan Resit (PDF)
       </button>
       
-      <button class="btn btn-back" onclick="window.location.href='index.html'">
+      <button class="btn btn-back" onclick="restoreAndBack()">
           &larr; Kembali atau ubah pesanan
       </button>
   </div>
 
 <script>
-  // LOAD DATA - FIX: Get items from orderInfo NOT pipah_cart (since cart is cleared)
+  // LOAD DATA
   const orderInfo = JSON.parse(localStorage.getItem('pipah_order_info') || '{}');
-  const cartItems = orderInfo.items || []; // This holds the cart data now
+  const cartItems = orderInfo.items || []; 
 
   // INIT
   document.addEventListener('DOMContentLoaded', () => {
@@ -165,15 +158,15 @@
       document.getElementById('order-id').innerText = orderInfo.orderId;
       document.getElementById('order-date').innerText = new Date(orderInfo.date).toLocaleDateString('ms-MY');
       document.getElementById('order-name').innerText = orderInfo.buyerName;
-      document.getElementById('order-addr').innerText = orderInfo.buyerAddress;
+      document.getElementById('order-addr').innerText = orderInfo.buyerAddress || '-';
 
       // Fill Items
       const list = document.getElementById('invoice-items');
       let subtotal = 0;
       
       cartItems.forEach(item => {
-          // FIX: Use finalPrice (calculated tiered price) or fallback to original price
-          const unitPrice = item.finalPrice || item.price;
+          // SAFE PARSING: Ensure price is a number
+          const unitPrice = parseFloat(item.finalPrice || item.price || 0);
           const totalItem = unitPrice * item.qty;
           subtotal += totalItem;
           
@@ -192,18 +185,25 @@
       document.getElementById('txt-total').innerText = "RM " + subtotal.toFixed(2);
   });
 
-  // 1. WHATSAPP LOGIC
+  // 1. RESTORE CART & GO BACK (NEW LOGIC)
+  function restoreAndBack() {
+      // Put the items back into the cart variable
+      localStorage.setItem('pipah_cart', JSON.stringify(cartItems));
+      window.location.href = 'index.html';
+  }
+
+  // 2. WHATSAPP LOGIC
   function sendWhatsApp() {
       const phone = orderInfo.whatsappAdmin || '601121243407';
       let msg = `*PESANAN BARU PIPAH COOKIES* 🍪\n`;
       msg += `ID: ${orderInfo.orderId}\n`;
       msg += `Nama: ${orderInfo.buyerName}\n`;
-      msg += `Alamat/Nota: ${orderInfo.buyerAddress}\n\n`;
+      msg += `Alamat: ${orderInfo.buyerAddress}\n\n`;
       msg += `*SENARAI BARANG:*\n`;
       
       let total = 0;
       cartItems.forEach(item => {
-          const unitPrice = item.finalPrice || item.price;
+          const unitPrice = parseFloat(item.finalPrice || item.price || 0);
           msg += `- ${item.name} (x${item.qty}) - RM ${(unitPrice * item.qty).toFixed(2)}\n`;
           total += unitPrice * item.qty;
       });
@@ -215,10 +215,15 @@
       window.open(url, '_blank');
   }
 
-  // 2. PDF LOGIC
+  // 3. PDF LOGIC (FIXED HEIGHT)
   function genPDF() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'mm', format: [80, 150] }); // Receipt size
+      
+      // Calculate height based on number of items (Dynamic Height)
+      // Base height 80mm + 10mm per item
+      const dynamicHeight = 100 + (cartItems.length * 10);
+      
+      const doc = new jsPDF({ unit: 'mm', format: [80, dynamicHeight] });
       
       let y = 10;
       doc.setFontSize(14); doc.setFont("helvetica", "bold");
@@ -228,23 +233,30 @@
       doc.text("Resit Pesanan", 40, y, { align: "center" }); y += 10;
       
       doc.text(`ID: ${orderInfo.orderId}`, 5, y); y += 5;
-      doc.text(`Tkh: ${new Date().toLocaleDateString()}`, 5, y); y += 5;
+      doc.text(`Tkh: ${new Date(orderInfo.date).toLocaleDateString('ms-MY')}`, 5, y); y += 5;
       doc.text(`Nama: ${orderInfo.buyerName}`, 5, y); y += 8;
       
       doc.line(5, y, 75, y); y += 5;
 
       let total = 0;
       cartItems.forEach(item => {
-          const unitPrice = item.finalPrice || item.price;
-          doc.text(`${item.name} x${item.qty}`, 5, y);
+          const unitPrice = parseFloat(item.finalPrice || item.price || 0);
+          
+          // Truncate long names for PDF
+          let safeName = item.name.length > 25 ? item.name.substring(0, 25) + "..." : item.name;
+          
+          doc.text(`${safeName}`, 5, y);
+          y += 4;
+          doc.text(`x${item.qty} @ RM${unitPrice.toFixed(2)}`, 5, y, { align: "left", color: "#777" });
           doc.text(`RM ${(unitPrice * item.qty).toFixed(2)}`, 75, y, { align: "right" });
           total += unitPrice * item.qty;
-          y += 5;
+          y += 6;
       });
 
-      y += 3;
-      doc.line(5, y, 75, y); y += 5;
+      y += 2;
+      doc.line(5, y, 75, y); y += 6;
       
+      doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.text("JUMLAH", 5, y);
       doc.text(`RM ${total.toFixed(2)}`, 75, y, { align: "right" });
