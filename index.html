@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <html lang="ms">
 <head>
@@ -421,7 +423,8 @@
     let products = [], cart = JSON.parse(localStorage.getItem('pipah_cart')) || [];
     let settings = { whatsapp: '601121243407', resellerLink: '#' };
     let swiperInstance = null;
-    let deferredPrompt; 
+    let deferredPrompt;
+    let sliderInterval = null; // FIX 2: Added to prevent memory leak
 
     // --- DETECT DEVICE & MODE ---
     const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
@@ -456,15 +459,21 @@
                 const d = doc.data();
                 const pid = doc.id;
                 
-                // CRITICAL FIX: Merge data to preserve fields like 'category'
+                // CRITICAL FIX 1: Merge data but PROTECT the original category
                 const existingIndex = products.findIndex(p => p.id === pid);
                 if (existingIndex > -1) {
+                    const originalCategory = products[existingIndex].category;
                     products[existingIndex] = { ...products[existingIndex], ...d }; 
+                    
+                    // If the original category was valid (e.g., 'Cookies') and the new update (from trending) 
+                    // is trying to overwrite it with 'Trending', revert it.
+                    if (originalCategory && originalCategory !== 'Trending' && products[existingIndex].category === 'Trending') {
+                        products[existingIndex].category = originalCategory;
+                    }
                 } else {
                     products.push({ id: pid, ...d });
                 }
                 
-                // Use merged data for display
                 const finalData = existingIndex > -1 ? products[existingIndex] : { id: pid, ...d };
                 trendItems.push(finalData);
             });
@@ -482,7 +491,6 @@
                 const btnState = isSoldOut ? 'disabled style="background:#ccc; cursor:not-allowed;"' : '';
                 const btnText = isSoldOut ? 'Sold Out' : '<i class="fas fa-plus-circle"></i> Tambah';
                 
-                // CRITICAL FIX: Escape ID for onclick
                 const addToCartAction = isSoldOut ? '' : `onclick="event.stopPropagation(); addToCart('${escapeId(d.id)}')"`;
 
                 wrapper.innerHTML += `
@@ -507,6 +515,10 @@
                 coverflowEffect: { rotate: 30, stretch: 0, depth: 100, modifier: 1, slideShadows: true }, 
                 pagination: { el: ".swiper-pagination" } 
             });
+
+            // FIX 3: Re-render main grid so prices update instantly if they change in Trending
+            const activeBtn = document.querySelector('.cat-btn.active');
+            if(activeBtn) activeBtn.click();
         });
 
         // PRODUCTS - FIXED MERGE
@@ -593,7 +605,17 @@
         }
     });
 
-    function startAutoSlide() { const s=document.getElementById('hero-slider'); setInterval(()=>{ if(s) { s.scrollLeft+=s.offsetWidth; if(s.scrollLeft>=s.scrollWidth-s.offsetWidth) s.scrollLeft=0; } }, 5000); }
+    // FIX 2: Clear previous interval to prevent speeding slider
+    function startAutoSlide() { 
+        const s = document.getElementById('hero-slider'); 
+        if(sliderInterval) clearInterval(sliderInterval);
+        sliderInterval = setInterval(() => { 
+            if(s) { 
+                s.scrollLeft += s.offsetWidth; 
+                if(s.scrollLeft >= s.scrollWidth - s.offsetWidth) s.scrollLeft = 0; 
+            } 
+        }, 5000); 
+    }
 
     // RENDER PRODUCTS
     function renderProducts(l) { 
