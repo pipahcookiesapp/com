@@ -308,6 +308,72 @@
     .drawer.open { transform: translateX(-50%) translateY(0); visibility: visible; }
 
     #loader { max-width: 100%; left: 0; right:0; transform: none; }
+  /* --- DRAGGABLE WA BUTTON --- */
+.wa-float-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    border-radius: 50%;
+    box-shadow: 0 10px 25px rgba(37, 211, 102, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 32px;
+    z-index: 1000;
+    cursor: grab;
+    transition: transform 0.2s;
+    user-select: none;
+    touch-action: none; /* Critical for dragging */
+}
+
+.wa-float-btn:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+/* --- WA MODAL --- */
+.wa-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    display: none;
+    align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s;
+}
+.wa-modal.show { display: flex; opacity: 1; }
+
+.wa-modal-content {
+    background: white;
+    width: 90%; max-width: 350px;
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.wa-modal.show .wa-modal-content { transform: scale(1); }
+
+.wa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.wa-header h3 { margin: 0; font-size: 18px; color: #128C7E; font-weight: 700; }
+.wa-header button { background: none; border: none; font-size: 20px; color: #999; cursor: pointer; }
+
+.wa-list { display: flex; flex-direction: column; gap: 10px; }
+.wa-item {
+    background: #f5f5f5; padding: 15px;
+    border-radius: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: 0.2s;
+}
+.wa-item:active { background: #e0f2f1; border-color: #25D366; transform: scale(0.98); }
+.wa-item span { font-weight: 600; font-size: 14px; color: #333; }
+.wa-item i { color: #ccc; font-size: 12px; }
+
   </style>
 </head>
 <body>
@@ -405,8 +471,44 @@
       </nav>
 
   </div> 
+  <div id="wa-float-btn" class="wa-float-btn">
+    <i class="fab fa-whatsapp"></i>
+</div>
 
-  <script>
+<div id="wa-modal" class="wa-modal">
+    <div class="wa-modal-content">
+        <div class="wa-header">
+            <h3>Chat dengan Pipah</h3>
+            <button onclick="closeWaModal()">✕</button>
+        </div>
+        <p style="font-size:13px; color:#666; margin-bottom:15px;">Pilih topik untuk mula chat di WhatsApp:</p>
+        
+        <div class="wa-list">
+            <div class="wa-item" onclick="sendWa('Hi Pipah, saya nak order cookies! 🍪')">
+                <span>🍪 Nak Order Cookies</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="wa-item" onclick="sendWa('Hi, nak tanya stok apa yang available? 🔥')">
+                <span>🔥 Tanya Stok Available</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="wa-item" onclick="sendWa('Hi, saya berminat nak jadi Reseller / Agent 💰')">
+                <span>💰 Nak Jadi Reseller</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="wa-item" onclick="sendWa('Hi, nak check status order saya 📦')">
+                <span>📦 Check Status Order</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="wa-item" onclick="sendWa('Hi Pipah, ada masalah dengan order...')">
+                <span>🆘 Bantuan / Lain-lain</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
     // --- API CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyA2Y2cOh3J7U916Ip0tnDDFVs2fK6sACl0",
@@ -418,23 +520,21 @@
     };
 
     try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch (e) { console.error(e); }
-    // ENABLE OFFLINE PERSISTENCE
-firebase.firestore().enablePersistence()
-    .catch((err) => {
-        if (err.code == 'failed-precondition') {
-            console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-        } else if (err.code == 'unimplemented') {
-            console.log('The current browser does not support all of the features required to enable persistence');
-        }
-    });
-
-const db = firebase.firestore();
     
-    let products = [], cart = JSON.parse(localStorage.getItem('pipah_cart')) || [];
+    // ENABLE OFFLINE PERSISTENCE
+    firebase.firestore().enablePersistence().catch((err) => { console.log('Persistence error:', err.code); });
+
+    const db = firebase.firestore();
+    
+    // DATA CONTAINERS
+    let products = [];          // Master list of all products
+    let trendingCache = [];     // List of trending items (IDs + basic info)
+    let cart = JSON.parse(localStorage.getItem('pipah_cart')) || [];
     let settings = { whatsapp: '601121243407', resellerLink: '#' };
+    
     let swiperInstance = null;
     let deferredPrompt;
-    let sliderInterval = null; // FIX 2: Added to prevent memory leak
+    let sliderInterval = null;
 
     // --- DETECT DEVICE & MODE ---
     const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
@@ -453,89 +553,32 @@ const db = firebase.firestore();
 
         db.collection('settings').doc('config').onSnapshot(d => { if(d.exists) settings = {...settings, ...d.data()}; });
 
-        // HERO
+        // HERO SLIDER
         db.collection('hero_banners').limit(4).onSnapshot(s => {
             const c = document.getElementById('hero-slider'); c.innerHTML='';
             s.forEach(d => c.innerHTML += `<div class="hero-card" style="background-image: url('${d.data().image}');" data-tilt><div class="hero-overlay"><h2 class="hero-title">${d.data().title||''}</h2></div></div>`);
             startAutoSlide();
         });
 
-        // TRENDING - FIXED: MERGE DATA, DONT OVERWRITE
+        // --- LISTENER 1: TRENDING PRODUCTS ---
+        // Just captures the IDs and calls the render function
         db.collection('trending_products').limit(10).onSnapshot(s => {
-            const wrapper = document.getElementById('trending-wrapper');
-            let trendItems = [];
-
+            trendingCache = [];
             s.forEach(doc => {
-                const d = doc.data();
-                const pid = doc.id;
-                
-                // CRITICAL FIX 1: Merge data but PROTECT the original category
-                const existingIndex = products.findIndex(p => p.id === pid);
-                if (existingIndex > -1) {
-                    const originalCategory = products[existingIndex].category;
-                    products[existingIndex] = { ...products[existingIndex], ...d }; 
-                    
-                    // If the original category was valid (e.g., 'Cookies') and the new update (from trending) 
-                    // is trying to overwrite it with 'Trending', revert it.
-                    if (originalCategory && originalCategory !== 'Trending' && products[existingIndex].category === 'Trending') {
-                        products[existingIndex].category = originalCategory;
-                    }
-                } else {
-                    products.push({ id: pid, ...d });
-                }
-                
-                const finalData = existingIndex > -1 ? products[existingIndex] : { id: pid, ...d };
-                trendItems.push(finalData);
+                trendingCache.push({ id: doc.id, ...doc.data() });
             });
-
-            // Sort: Available First
-            trendItems.sort((a, b) => {
-                if (a.available === b.available) return 0;
-                return a.available ? -1 : 1;
-            });
-
-            wrapper.innerHTML = '';
-            trendItems.forEach(d => {
-                const isSoldOut = (d.available === false);
-                const opacityStyle = isSoldOut ? 'opacity:0.6; filter:grayscale(100%);' : '';
-                const btnState = isSoldOut ? 'disabled style="background:#ccc; cursor:not-allowed;"' : '';
-                const btnText = isSoldOut ? 'Sold Out' : '<i class="fas fa-plus-circle"></i> Tambah';
-                
-                const addToCartAction = isSoldOut ? '' : `onclick="event.stopPropagation(); addToCart('${escapeId(d.id)}')"`;
-
-                wrapper.innerHTML += `
-                    <div class="swiper-slide" style="background-image: url('${d.image}'); ${opacityStyle}">
-                        <div class="slide-content">
-                            <h3 style="margin:0; font-size:15px; font-weight:700;">${d.name}</h3>
-                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                                <span style="font-size:13px; color:var(--primary); font-weight:bold;">RM ${safeFloat(d.price).toFixed(2)}</span>
-                            </div>
-                            <button class="slide-add-btn" ${btnState} ${addToCartAction}>${btnText}</button>
-                        </div>
-                    </div>`;
-            });
-
-            if(swiperInstance) swiperInstance.destroy(true, true);
-            swiperInstance = new Swiper(".mySwiper", { 
-                effect: "coverflow", 
-                grabCursor: true, 
-                centeredSlides: true, 
-                slidesPerView: "auto", 
-                loop: true, 
-                coverflowEffect: { rotate: 30, stretch: 0, depth: 100, modifier: 1, slideShadows: true }, 
-                pagination: { el: ".swiper-pagination" } 
-            });
-
-            // FIX 3: Re-render main grid so prices update instantly if they change in Trending
-            const activeBtn = document.querySelector('.cat-btn.active');
-            if(activeBtn) activeBtn.click();
+            // Render UI immediately using whatever data we have
+            renderTrendingWidget(); 
         });
 
-        // PRODUCTS - FIXED MERGE
+        // --- LISTENER 2: MAIN PRODUCTS ---
+        // Updates master data AND refreshes Trending UI to ensure prices are fresh
         db.collection('products').onSnapshot(s => {
             s.forEach(d => { 
                 const pid = d.id;
                 const data = d.data();
+                
+                // Update Master List
                 const existingIndex = products.findIndex(p => p.id === pid);
                 if(existingIndex > -1) {
                     products[existingIndex] = {...products[existingIndex], ...data};
@@ -543,7 +586,12 @@ const db = firebase.firestore();
                     products.push({id:pid, ...data}); 
                 }
             });
+
+            // 1. Update Main Grid
             renderProducts(products.filter(p=> p.category !== 'Trending'));
+            
+            // 2. CRITICAL FIX: Update Trending Grid too because prices might have changed!
+            renderTrendingWidget();
         });
 
         // GALLERY
@@ -552,9 +600,71 @@ const db = firebase.firestore();
             s.forEach(d => c.innerHTML += `<div class="gallery-item-grid" style="background-image: url('${d.data().image}');" data-tilt></div>`);
             try { VanillaTilt.init(document.querySelectorAll("[data-tilt]")); } catch(e){}
         });
+        
         updateCartUI();
         initInstallPopup();
     };
+
+    // --- NEW FUNCTION: RENDER TRENDING WIDGET ---
+    function renderTrendingWidget() {
+        const wrapper = document.getElementById('trending-wrapper');
+        if(!wrapper) return;
+
+        // Merge Strategy: Combine trendingCache with Master Products
+        // We use Master Products as the priority for Price/Name/Image
+        let trendItems = trendingCache.map(tItem => {
+            const masterItem = products.find(p => p.id === tItem.id);
+            if (masterItem) {
+                // Return cache merged with master (Master overwrites cache)
+                return { ...tItem, ...masterItem };
+            }
+            return tItem; // Fallback to cache if not in master list yet
+        });
+
+        // Sort: Available First
+        trendItems.sort((a, b) => {
+            if (a.available === b.available) return 0;
+            return a.available ? -1 : 1;
+        });
+
+        wrapper.innerHTML = '';
+        
+        if(trendItems.length === 0) {
+             wrapper.innerHTML = '<div class="swiper-slide" style="background:#eee; display:flex; align-items:center; justify-content:center; color:#999;">Loading...</div>';
+             return;
+        }
+
+        trendItems.forEach(d => {
+            const isSoldOut = (d.available === false);
+            const opacityStyle = isSoldOut ? 'opacity:0.6; filter:grayscale(100%);' : '';
+            const btnState = isSoldOut ? 'disabled style="background:#ccc; cursor:not-allowed;"' : '';
+            const btnText = isSoldOut ? 'Sold Out' : '<i class="fas fa-plus-circle"></i> Tambah';
+            const addToCartAction = isSoldOut ? '' : `onclick="event.stopPropagation(); addToCart('${escapeId(d.id)}')"`;
+
+            wrapper.innerHTML += `
+                <div class="swiper-slide" style="background-image: url('${d.image}'); ${opacityStyle}">
+                    <div class="slide-content">
+                        <h3 style="margin:0; font-size:15px; font-weight:700;">${d.name}</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <span style="font-size:13px; color:var(--primary); font-weight:bold;">RM ${safeFloat(d.price).toFixed(2)}</span>
+                        </div>
+                        <button class="slide-add-btn" ${btnState} ${addToCartAction}>${btnText}</button>
+                    </div>
+                </div>`;
+        });
+
+        // Re-Initialize Swiper safely
+        if(swiperInstance) swiperInstance.destroy(true, true);
+        swiperInstance = new Swiper(".mySwiper", { 
+            effect: "coverflow", 
+            grabCursor: true, 
+            centeredSlides: true, 
+            slidesPerView: "auto", 
+            loop: true, 
+            coverflowEffect: { rotate: 30, stretch: 0, depth: 100, modifier: 1, slideShadows: true }, 
+            pagination: { el: ".swiper-pagination" } 
+        });
+    }
 
     // --- SMART INSTALL POPUP ---
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -615,7 +725,7 @@ const db = firebase.firestore();
         }
     });
 
-    // FIX 2: Clear previous interval to prevent speeding slider
+    // AUTO SLIDER
     function startAutoSlide() { 
         const s = document.getElementById('hero-slider'); 
         if(sliderInterval) clearInterval(sliderInterval);
@@ -656,11 +766,22 @@ const db = firebase.firestore();
     function filterCat(c,b) { document.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); const l=products.filter(p=>p.category!=='Trending'); renderProducts(c==='all'?l:l.filter(p=>p.category===c)); }
     
     function addToCart(id) { 
-        const p=products.find(x=>x.id===id), i=cart.find(x=>x.id===id); 
-        if(!p)return; 
+        // Always fetch the LATEST product data from the global 'products' array
+        const p=products.find(x=>x.id===id);
+        const i=cart.find(x=>x.id===id); 
+        
+        if(!p) return; 
         if(p.available === false) return;
 
-        i?i.qty++:cart.push({...p,qty:1}); 
+        // Ensure we push the LATEST data (including price) to cart
+        if(i) {
+            i.qty++;
+            // Update cart item price in case it changed in DB while item was in cart
+            i.price = p.price; 
+        } else {
+            cart.push({...p,qty:1}); 
+        }
+        
         saveCart(); 
     }
     
@@ -672,14 +793,13 @@ const db = firebase.firestore();
     
     function openReseller() { if(settings.resellerLink && settings.resellerLink !== '#') window.open(settings.resellerLink, '_blank'); }
 
-    // --- UPDATE CART UI (FIXED PRICING SAFETY) ---
+    // --- UPDATE CART UI ---
     function updateCartUI() { 
         const l = document.getElementById('cart-content'); 
         l.innerHTML = ''; 
         let t = 0, c = 0; 
         
         cart.forEach((x, i) => { 
-            // SAFETY: Parse Values
             let unitPrice = safeFloat(x.price); 
             const currentQty = parseInt(x.qty) || 1;
             const tier3Qty = parseInt(x.minQty3 || 99999);
@@ -772,8 +892,105 @@ const db = firebase.firestore();
         cart = []; 
         window.location.href='invois.html'; 
     }
+    // --- DRAGGABLE WA BUTTON LOGIC ---
+    const waBtn = document.getElementById('wa-float-btn');
+    let isDragging = false;
+    let hasMoved = false;
+    let startX, startY, initialLeft, initialTop;
+
+    // Helper to get coordinates
+    const getClientCoords = (e) => {
+        return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+    };
+
+    const dragStart = (e) => {
+        isDragging = true;
+        hasMoved = false; // Reset movement check
+        const coords = getClientCoords(e);
+        startX = coords.x;
+        startY = coords.y;
+        
+        const rect = waBtn.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+        
+        waBtn.style.transition = 'none'; // Disable transition for instant follow
+    };
+
+    const dragMove = (e) => {
+        if (!isDragging) return;
+        const coords = getClientCoords(e);
+        const dx = coords.x - startX;
+        const dy = coords.y - startY;
+
+        // If moved more than 5 pixels, consider it a drag, not a click
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasMoved = true;
+
+        waBtn.style.left = `${initialLeft + dx}px`;
+        waBtn.style.top = `${initialTop + dy}px`;
+        waBtn.style.bottom = 'auto'; // Clear bottom/right constraint
+        waBtn.style.right = 'auto';
+        
+        e.preventDefault(); // Prevent scrolling while dragging
+    };
+
+    const dragEnd = () => {
+        isDragging = false;
+        waBtn.style.transition = 'all 0.3s ease'; // Re-enable smooth snap
+
+        // Snap to nearest side (Left or Right)
+        const screenWidth = window.innerWidth;
+        const btnRect = waBtn.getBoundingClientRect();
+        
+        if (btnRect.left + btnRect.width / 2 < screenWidth / 2) {
+            waBtn.style.left = '20px'; // Snap Left
+        } else {
+            waBtn.style.left = (screenWidth - btnRect.width - 20) + 'px'; // Snap Right
+        }
+
+        // Keep within vertical bounds
+        if (btnRect.top < 60) waBtn.style.top = '60px';
+        if (btnRect.bottom > window.innerHeight - 60) waBtn.style.top = (window.innerHeight - btnRect.height - 80) + 'px';
+
+        // Only open modal if it wasn't a drag operation
+        if (!hasMoved) openWaModal();
+    };
+
+    // Event Listeners (Touch & Mouse)
+    waBtn.addEventListener('mousedown', dragStart);
+    window.addEventListener('mousemove', dragMove);
+    window.addEventListener('mouseup', dragEnd);
+
+    waBtn.addEventListener('touchstart', dragStart, {passive: false});
+    window.addEventListener('touchmove', dragMove, {passive: false});
+    waBtn.addEventListener('touchend', dragEnd);
+
+    // --- MODAL LOGIC ---
+    function openWaModal() {
+        const m = document.getElementById('wa-modal');
+        m.classList.add('show'); 
+    }
+
+    function closeWaModal() {
+        const m = document.getElementById('wa-modal');
+        m.classList.remove('show');
+    }
+
+    // Close modal if clicked outside
+    document.getElementById('wa-modal').addEventListener('click', (e) => {
+        if(e.target === document.getElementById('wa-modal')) closeWaModal();
+    });
+
+    function sendWa(msg) {
+        // Uses the global 'settings' variable you already have
+        const phone = settings.whatsapp || '601121243407';
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+        closeWaModal();
+    }
 
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js').then(reg => console.log('SW Registered')).catch(err => console.log('SW Fail', err)); }); }
   </script>
+
 </body>
 </html>
