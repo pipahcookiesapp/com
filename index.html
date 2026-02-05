@@ -308,45 +308,40 @@
     .drawer.open { transform: translateX(-50%) translateY(0); visibility: visible; }
 
     #loader { max-width: 100%; left: 0; right:0; transform: none; }
-  /* --- DRAGGABLE WA BUTTON (UPDATED) --- */
+
+    /* --- FIXED LEFT SIDE BUTTON (No Floating/Dragging) --- */
 .wa-float-btn {
     position: fixed;
+    top: 50%;                 /* Center vertically */
+    left: 0;                  /* Stick to the left edge */
+    transform: translateY(-50%); /* Perfect centering alignment */
     
-    /* 1. POSITION: LEFT CENTER */
-    left: 20px;
-    top: 50%; 
-    margin-top: -30px; /* Exact center adjustment (half of height) */
+    z-index: 900;             /* High enough to see, low enough to be behind Cart */
     
-    /* Reset old positions */
-    right: auto;
-    bottom: auto;
-
-    /* 2. LAYERS: BELOW OVERLAY */
-    /* Your Cart Overlay is 990, so we use 900 to sit BEHIND it */
-    z-index: 900; 
-
-    /* Button Style */
-    width: 60px;
-    height: 60px;
+    width: 45px;              /* Slightly smaller width */
+    height: 50px;
+    
+    /* Make it look like a tab/sticker sticking out */
+    border-radius: 0 12px 12px 0; 
+    
     background: linear-gradient(135deg, #25D366, #128C7E);
-    border-radius: 50%;
-    box-shadow: 0 10px 25px rgba(37, 211, 102, 0.4);
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+    
     display: flex;
     align-items: center;
     justify-content: center;
+    
     color: white;
-    font-size: 32px;
-    cursor: grab;
-    transition: transform 0.2s;
-    user-select: none;
-    touch-action: none; 
+    font-size: 26px;
+    cursor: pointer;
+    transition: width 0.2s;   /* Smooth effect on hover */
 }
 
+/* Optional: Gets slightly bigger when you touch it */
 .wa-float-btn:active {
-    cursor: grabbing;
-    transform: scale(0.95);
+    width: 55px;
 }
-
+    
 /* --- WA MODAL --- */
 .wa-modal {
     position: fixed; inset: 0;
@@ -483,7 +478,7 @@
       </nav>
 
   </div> 
-  <div id="wa-float-btn" class="wa-float-btn">
+  <div id="wa-float-btn" class="wa-float-btn" onclick="openWaModal()">
     <i class="fab fa-whatsapp"></i>
 </div>
 
@@ -904,79 +899,6 @@
         cart = []; 
         window.location.href='invois.html'; 
     }
-    // --- DRAGGABLE WA BUTTON LOGIC ---
-    const waBtn = document.getElementById('wa-float-btn');
-    let isDragging = false;
-    let hasMoved = false;
-    let startX, startY, initialLeft, initialTop;
-
-    // Helper to get coordinates
-    const getClientCoords = (e) => {
-        return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
-    };
-
-    const dragStart = (e) => {
-        isDragging = true;
-        hasMoved = false; // Reset movement check
-        const coords = getClientCoords(e);
-        startX = coords.x;
-        startY = coords.y;
-        
-        const rect = waBtn.getBoundingClientRect();
-        initialLeft = rect.left;
-        initialTop = rect.top;
-        
-        waBtn.style.transition = 'none'; // Disable transition for instant follow
-    };
-
-    const dragMove = (e) => {
-        if (!isDragging) return;
-        const coords = getClientCoords(e);
-        const dx = coords.x - startX;
-        const dy = coords.y - startY;
-
-        // If moved more than 5 pixels, consider it a drag, not a click
-        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasMoved = true;
-
-        waBtn.style.left = `${initialLeft + dx}px`;
-        waBtn.style.top = `${initialTop + dy}px`;
-        waBtn.style.bottom = 'auto'; // Clear bottom/right constraint
-        waBtn.style.right = 'auto';
-        
-        e.preventDefault(); // Prevent scrolling while dragging
-    };
-
-    const dragEnd = () => {
-        isDragging = false;
-        waBtn.style.transition = 'all 0.3s ease'; // Re-enable smooth snap
-
-        // Snap to nearest side (Left or Right)
-        const screenWidth = window.innerWidth;
-        const btnRect = waBtn.getBoundingClientRect();
-        
-        if (btnRect.left + btnRect.width / 2 < screenWidth / 2) {
-            waBtn.style.left = '20px'; // Snap Left
-        } else {
-            waBtn.style.left = (screenWidth - btnRect.width - 20) + 'px'; // Snap Right
-        }
-
-        // Keep within vertical bounds
-        if (btnRect.top < 60) waBtn.style.top = '60px';
-        if (btnRect.bottom > window.innerHeight - 60) waBtn.style.top = (window.innerHeight - btnRect.height - 80) + 'px';
-
-        // Only open modal if it wasn't a drag operation
-        if (!hasMoved) openWaModal();
-    };
-
-    // Event Listeners (Touch & Mouse)
-    waBtn.addEventListener('mousedown', dragStart);
-    window.addEventListener('mousemove', dragMove);
-    window.addEventListener('mouseup', dragEnd);
-
-    waBtn.addEventListener('touchstart', dragStart, {passive: false});
-    window.addEventListener('touchmove', dragMove, {passive: false});
-    waBtn.addEventListener('touchend', dragEnd);
-
     // --- MODAL LOGIC ---
     function openWaModal() {
         const m = document.getElementById('wa-modal');
