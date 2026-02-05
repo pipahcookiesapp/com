@@ -48,7 +48,7 @@
         min-height: 100dvh; 
         position: relative;
         overflow-x: hidden;
-        padding-bottom: 120px;
+        padding-bottom: 180px;
     }
 
     h1, h2, h3, h4, button, .brand { font-family: "Outfit", sans-serif; }
@@ -988,7 +988,27 @@
         window.open(url, '_blank');
         closeWaModal();
     }
+// --- AUTO HIDE WA BUTTON ON SCROLL ---
+let isScrolling;
+const waButton = document.getElementById('wa-float-btn');
 
+window.addEventListener('scroll', () => {
+    // 1. Hide button when scrolling starts
+    waButton.style.opacity = '0.3'; // Make it semi-transparent
+    waButton.style.pointerEvents = 'none'; // Prevent accidental clicks
+    waButton.style.transform = 'scale(0.8)'; // Shrink slightly
+
+    // 2. Clear previous timeout
+    window.clearTimeout(isScrolling);
+
+    // 3. Set a timeout to run after scrolling stops (e.g., 150ms)
+    isScrolling = setTimeout(() => {
+        waButton.style.opacity = '1';
+        waButton.style.pointerEvents = 'auto';
+        waButton.style.transform = 'scale(1)';
+    }, 150);
+}, false);
+  
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js').then(reg => console.log('SW Registered')).catch(err => console.log('SW Fail', err)); }); }
   </script>
 
