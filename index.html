@@ -308,11 +308,24 @@
     .drawer.open { transform: translateX(-50%) translateY(0); visibility: visible; }
 
     #loader { max-width: 100%; left: 0; right:0; transform: none; }
-  /* --- DRAGGABLE WA BUTTON --- */
+  /* --- DRAGGABLE WA BUTTON (UPDATED) --- */
 .wa-float-btn {
     position: fixed;
-    bottom: 100px;
-    right: 20px;
+    
+    /* 1. POSITION: LEFT CENTER */
+    left: 20px;
+    top: 50%; 
+    margin-top: -30px; /* Exact center adjustment (half of height) */
+    
+    /* Reset old positions */
+    right: auto;
+    bottom: auto;
+
+    /* 2. LAYERS: BELOW OVERLAY */
+    /* Your Cart Overlay is 990, so we use 900 to sit BEHIND it */
+    z-index: 900; 
+
+    /* Button Style */
     width: 60px;
     height: 60px;
     background: linear-gradient(135deg, #25D366, #128C7E);
@@ -323,11 +336,10 @@
     justify-content: center;
     color: white;
     font-size: 32px;
-    z-index: 1000;
     cursor: grab;
     transition: transform 0.2s;
     user-select: none;
-    touch-action: none; /* Critical for dragging */
+    touch-action: none; 
 }
 
 .wa-float-btn:active {
