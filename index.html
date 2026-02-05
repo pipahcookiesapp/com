@@ -928,20 +928,25 @@ const waButton = document.getElementById('wa-float-btn');
 
 window.addEventListener('scroll', () => {
     // 1. Hide button when scrolling starts
-    waButton.style.opacity = '0.3'; // Make it semi-transparent
-    waButton.style.pointerEvents = 'none'; // Prevent accidental clicks
-    waButton.style.transform = 'scale(0.8)'; // Shrink slightly
+    waButton.style.opacity = '0.3'; 
+    waButton.style.pointerEvents = 'none'; 
+    
+    // CRITICAL FIX: Keep the translateY(-50%) so it stays centered!
+    waButton.style.transform = 'translateY(-50%) scale(0.8)'; 
 
     // 2. Clear previous timeout
     window.clearTimeout(isScrolling);
 
-    // 3. Set a timeout to run after scrolling stops (e.g., 150ms)
+    // 3. Set a timeout to run after scrolling stops
     isScrolling = setTimeout(() => {
         waButton.style.opacity = '1';
         waButton.style.pointerEvents = 'auto';
-        waButton.style.transform = 'scale(1)';
+        
+        // CRITICAL FIX: Return to centered position
+        waButton.style.transform = 'translateY(-50%) scale(1)'; 
     }, 150);
 }, false);
+
   
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js').then(reg => console.log('SW Registered')).catch(err => console.log('SW Fail', err)); }); }
   </script>
