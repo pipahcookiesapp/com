@@ -192,10 +192,16 @@
       border: 2px solid white; position: relative; cursor: zoom-in;
     }
     .slide-content {
-        background: rgba(255,255,255,0.95); width: 100%; padding: 15px;
-        backdrop-filter: blur(8px); transform: translateY(100px); transition: 0.4s;
-        display: flex; flex-direction: column; gap: 5px; pointer-events: auto;
-    }
+    background: rgba(255,255,255,0.95); width: 100%; padding: 15px;
+    backdrop-filter: blur(8px); transform: translateY(100px); transition: 0.4s;
+    display: flex; flex-direction: column; gap: 5px; 
+    
+    /* FIX: Force this layer above the Swiper Shadow Overlay */
+    position: relative; 
+    z-index: 10; 
+    pointer-events: auto;
+}
+
     .swiper-slide-active .slide-content { transform: translateY(0); }
     .slide-add-btn {
         background: var(--primary); color: white; border: none; padding: 8px; border-radius: 10px;
@@ -773,24 +779,36 @@
     function filterCat(c,b) { document.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); const l=products.filter(p=>p.category!=='Trending'); renderProducts(c==='all'?l:l.filter(p=>p.category===c)); }
     
     function addToCart(id) { 
-        // Always fetch the LATEST product data from the global 'products' array
-        const p=products.find(x=>x.id===id);
-        const i=cart.find(x=>x.id===id); 
-        
-        if(!p) return; 
-        if(p.available === false) return;
-
-        // Ensure we push the LATEST data (including price) to cart
-        if(i) {
-            i.qty++;
-            // Update cart item price in case it changed in DB while item was in cart
-            i.price = p.price; 
-        } else {
-            cart.push({...p,qty:1}); 
-        }
-        
-        saveCart(); 
+    // 1. Try to find the product in the Master List
+    let p = products.find(x => x.id === id);
+    
+    // 2. FIX: If not found, look in the Trending Cache
+    if (!p) {
+        p = trendingCache.find(x => x.id === id);
     }
+    
+    // 3. Safety Check: If still not found, or sold out, stop.
+    if (!p) return console.error("Product not found:", id); 
+    if (p.available === false) return;
+
+    const i = cart.find(x => x.id === id); 
+
+    if (i) {
+        i.qty++;
+        i.price = p.price; // Update price
+    } else {
+        cart.push({...p, qty: 1}); 
+    }
+    
+    saveCart(); 
+    
+    // Optional: Visual Feedback
+    const btn = document.getElementById('cart-nav-item');
+    btn.classList.remove('pulse-active');
+    void btn.offsetWidth; // Trigger reflow
+    btn.classList.add('pulse-active');
+}
+
     
     function saveCart() { localStorage.setItem('pipah_cart', JSON.stringify(cart)); updateCartUI(); }
     
